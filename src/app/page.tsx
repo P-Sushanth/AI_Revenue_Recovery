@@ -641,7 +641,7 @@ export default function Dashboard() {
                   </div>
                   
                   <button
-                    onClick={() => handleSimulateRecovery(selectedRisk.id)}
+                    onClick={() => handleSimulateRecovery(selectedRisk.workflows?.[0]?.id)}
                     disabled={recoveringId !== null}
                     className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-semibold transition disabled:opacity-50"
                   >

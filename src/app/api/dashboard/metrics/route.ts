@@ -7,14 +7,14 @@ export async function GET() {
   try {
     const db = getDbClient(true); // Bypass RLS as system runner
 
-    // 1. Fetch Revenue Risks (with Customer and Subscription details)
     const { data: risksData, error: risksError } = await db
       .from("revenue_risks")
       .select(`
         *,
         customer:customers(name, email, country),
         subscription:subscriptions(plan_name, amount, status),
-        payment_event:payment_events(provider, failure_code, failure_message, attempt_number)
+        payment_event:payment_events(provider, failure_code, failure_message, attempt_number),
+        workflows:recovery_workflows(id, status, recommended_action, approved_action, action_status)
       `)
       .order("created_at", { ascending: false });
 
