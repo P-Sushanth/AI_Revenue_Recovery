@@ -101,7 +101,7 @@ describe("Action Executor Integration Tests", () => {
       .select("event_type")
       .eq("workflow_id", testWorkflowId);
 
-    const logTypes = logs!.map((l) => l.event_type);
+    const logTypes = logs!.map((l: any) => l.event_type);
     expect(logTypes).toContain("policy_check_completed");
     expect(logTypes).toContain("action_executed");
     expect(logTypes).toContain("workflow_completed");

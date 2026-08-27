@@ -141,7 +141,7 @@ export async function processPaymentEvent(payload: unknown): Promise<ProcessEven
       throw new Error(`Failed to fetch customer payment history: ${historyError.message}`);
     }
 
-    const historicalPayments: PaymentEvent[] = (history || []).map((p) => ({
+    const historicalPayments: PaymentEvent[] = (history || []).map((p: any) => ({
       ...p,
       occurred_at: new Date(p.occurred_at),
       created_at: new Date(p.created_at),
@@ -235,7 +235,7 @@ export async function processPaymentEvent(payload: unknown): Promise<ProcessEven
     let resolvedWorkflowId: string | undefined;
 
     if (activeRisks && activeRisks.length > 0) {
-      const activeRiskIds = activeRisks.map((r) => r.id);
+      const activeRiskIds = activeRisks.map((r: { id: string }) => r.id);
 
       // Resolve Risks
       await db

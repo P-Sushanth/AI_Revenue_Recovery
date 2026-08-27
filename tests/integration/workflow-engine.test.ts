@@ -156,7 +156,7 @@ describe("Workflow Engine Integration Tests", () => {
       .eq("workflow_id", failResult.workflowId);
 
     expect(logs).toBeDefined();
-    const logTypes = logs!.map((l) => l.event_type);
+    const logTypes = logs!.map((l: any) => l.event_type);
     expect(logTypes).toContain("workflow_completed");
   });
 });

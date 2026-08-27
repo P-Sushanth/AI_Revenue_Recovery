@@ -37,10 +37,12 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
 
 // Standard client (safe for both browser and server)
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = supabaseUrl && supabaseAnonKey
+  ? createClient(supabaseUrl, supabaseAnonKey)
+  : (null as any);
 
 // Admin client (server-side only, bypasses RLS)
-export const supabaseAdmin = typeof window === "undefined"
+export const supabaseAdmin = typeof window === "undefined" && supabaseUrl && supabaseServiceRoleKey
   ? createClient(supabaseUrl, supabaseServiceRoleKey, {
       auth: {
         persistSession: false,
@@ -57,9 +59,12 @@ export const supabaseAdmin = typeof window === "undefined"
 export function getDbClient(useAdmin = false) {
   if (useAdmin) {
     if (!supabaseAdmin) {
-      throw new Error("Admin database client can only be initialized on the server side.");
+      throw new Error("Admin database client can only be initialized on the server side with valid environment keys.");
     }
     return supabaseAdmin;
+  }
+  if (!supabase) {
+    throw new Error("Standard Supabase client is not initialized. Please verify your environment keys.");
   }
   return supabase;
 }
