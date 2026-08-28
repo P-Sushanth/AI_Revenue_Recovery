@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
-import crypto from "crypto";
 import { processPaymentEvent } from "@/lib/recovery/process-payment-event";
 import { runAiAnalysis } from "@/lib/ai/recovery-agent";
 import { executeRecoveryAction } from "@/lib/recovery/action-executor";
+import { verifyRazorpayWebhookSignature } from "@/lib/payments/razorpay/signature";
+import { parseRazorpayWebhook } from "@/lib/payments/razorpay/parser";
 
 export async function POST(request: Request) {
   try {
@@ -18,12 +19,8 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "Missing signature" }, { status: 401 });
       }
 
-      const expectedSignature = crypto
-        .createHmac("sha256", webhookSecret)
-        .update(rawBody)
-        .digest("hex");
-
-      if (expectedSignature !== signature) {
+      const isValid = verifyRazorpayWebhookSignature(rawBody, signature, webhookSecret);
+      if (!isValid) {
         console.error("Signature verification failed.");
         return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
       }
@@ -32,82 +29,28 @@ export async function POST(request: Request) {
     }
 
     // 2. Parse payload
-    const payload = JSON.parse(rawBody);
-    const eventType = payload.event;
-    
-    // We only care about payment.failed and payment.captured / order.paid
-    if (eventType !== "payment.failed" && eventType !== "payment.captured" && eventType !== "order.paid") {
-      return NextResponse.json({ message: `Event ${eventType} ignored.` }, { status: 200 });
+    let payload: any;
+    try {
+      payload = JSON.parse(rawBody);
+    } catch (parseErr) {
+      return NextResponse.json({ error: "Malformed JSON payload" }, { status: 400 });
     }
 
-    const paymentEntity = payload.payload?.payment?.entity;
-    if (!paymentEntity) {
-      return NextResponse.json({ error: "Invalid payload: missing payment entity" }, { status: 400 });
+    // 3. Normalize values using the parser helper
+    const normalizedPayload = parseRazorpayWebhook(payload);
+    
+    // If the event type is valid but irrelevant, return success without processing
+    if (!normalizedPayload) {
+      return NextResponse.json({ message: "Event ignored." }, { status: 200 });
     }
 
-    // 3. Normalize values
-    const amountInPaise = paymentEntity.amount;
-    const amountInRupees = amountInPaise ? amountInPaise / 100 : 0;
-    const currency = paymentEntity.currency || "INR";
-    const externalEventId = paymentEntity.id; // e.g. pay_G3kK2...
-    
-    // In Razorpay, payment has a contact / email and optional notes.
-    // Razorpay customer_id is in paymentEntity.customer_id
-    const customerExternalId = paymentEntity.customer_id || paymentEntity.email;
-    
-    // Check if there is subscription_id in notes or root level
-    const subscriptionExternalId = 
-      paymentEntity.notes?.subscription_id || 
-      paymentEntity.notes?.subscription_external_id || 
-      paymentEntity.invoice_id || 
-      `sub_fallback_${customerExternalId}`;
-
-    const normalizedStatus = eventType === "payment.failed" ? "failed" : "succeeded";
-    
-    // Failure code mapping
-    let failureCode = null;
-    let failureMessage = null;
-    if (normalizedStatus === "failed") {
-      const razorpayReason = paymentEntity.error_reason || paymentEntity.error_code || "unknown";
-      failureMessage = paymentEntity.error_description || "Payment failed on Razorpay";
-      
-      // Map Razorpay failure reasons to our standard ones:
-      // card_expired, insufficient_funds, incorrect_pin, authentication_failed, card_declined, lost_or_stolen_card
-      if (razorpayReason.includes("expired")) {
-        failureCode = "expired_card";
-      } else if (razorpayReason.includes("insufficient") || razorpayReason.includes("balance")) {
-        failureCode = "insufficient_funds";
-      } else if (razorpayReason.includes("pin") || razorpayReason.includes("password")) {
-        failureCode = "incorrect_pin";
-      } else if (razorpayReason.includes("auth") || razorpayReason.includes("otp")) {
-        failureCode = "authentication_failed";
-      } else {
-        failureCode = "card_declined";
-      }
-    }
-
-    const normalizedPayload = {
-      provider: "razorpay",
-      external_event_id: externalEventId,
-      customer_external_id: customerExternalId || "unknown_customer",
-      subscription_external_id: subscriptionExternalId || "unknown_subscription",
-      amount: amountInRupees,
-      currency: currency,
-      status: normalizedStatus,
-      failure_code: failureCode,
-      failure_message: failureMessage,
-      attempt_number: 1, // Default or parse from metadata
-      occurred_at: new Date(payload.created_at * 1000).toISOString(),
-      raw_payload: payload,
-    };
-
-    console.log(`Razorpay webhook processing normalized event: ${externalEventId} (status: ${normalizedStatus})`);
+    console.log(`Razorpay webhook processing normalized event: ${normalizedPayload.external_event_id} (status: ${normalizedPayload.status})`);
     
     // 4. Process event to database
     const processResult = await processPaymentEvent(normalizedPayload);
 
     // 5. Asynchronously trigger recovery if it's a failed event and a workflow was created
-    if (normalizedStatus === "failed" && processResult.workflowId) {
+    if (normalizedPayload.status === "failed" && processResult.workflowId) {
       const workflowId = processResult.workflowId;
       console.log(`Autonomous recovery started for workflow ${workflowId}`);
       
@@ -131,7 +74,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       success: true,
-      message: `Event processed. status=${normalizedStatus}`,
+      message: `Event processed. status=${normalizedPayload.status}`,
       workflowId: processResult.workflowId || null,
       riskId: processResult.riskId || null,
     }, { status: 200 });
