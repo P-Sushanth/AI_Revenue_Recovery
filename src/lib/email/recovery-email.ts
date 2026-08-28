@@ -89,7 +89,7 @@ export async function sendRecoveryEmail(params: EmailParams): Promise<SendEmailR
           "Authorization": `Bearer ${resendApiKey}`,
         },
         body: JSON.stringify({
-          from: "Revenue Recovery <billing@yourdomain.com>", // In production, must be a verified domain
+          from: process.env.RESEND_FROM_EMAIL || "Revenue Recovery <billing@yourdomain.com>",
           to: customer.email,
           subject: `Action Required: Payment Update for ${subscription.plan_name}`,
           html: emailHtml,

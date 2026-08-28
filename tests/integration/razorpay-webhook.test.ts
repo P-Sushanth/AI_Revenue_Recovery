@@ -155,6 +155,62 @@ describe("Razorpay Webhook Integration Tests", () => {
     expect(["pending", "analyzing", "awaiting_approval", "completed", "executing"]).toContain(workflow.status);
   });
 
+  it("should process duplicate payment.failed event and ignore duplicate runs", async () => {
+    const paymentId = `pay_duplicate_test_${Date.now()}`;
+    const payload = {
+      event: "payment.failed",
+      payload: {
+        payment: {
+          entity: {
+            id: paymentId,
+            amount: 249900,
+            currency: "INR",
+            status: "failed",
+            customer_id: "cus_alex_123",
+            error_reason: "card_expired",
+            error_description: "Card has expired",
+            notes: {
+              subscription_id: "sub_alex_111",
+            },
+          },
+        },
+      },
+      created_at: Math.floor(Date.now() / 1000),
+    };
+
+    const signature = generateSignature(payload);
+
+    // Call 1
+    const req1 = new Request("http://localhost:3000/api/webhooks/razorpay", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-razorpay-signature": signature,
+      },
+      body: JSON.stringify(payload),
+    });
+    const res1 = await POST(req1);
+    expect(res1.status).toBe(200);
+    const body1 = await res1.json();
+    expect(body1.success).toBe(true);
+    expect(body1.workflowId).toBeDefined();
+
+    // Call 2 (Duplicate)
+    const req2 = new Request("http://localhost:3000/api/webhooks/razorpay", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-razorpay-signature": signature,
+      },
+      body: JSON.stringify(payload),
+    });
+    const res2 = await POST(req2);
+    expect(res2.status).toBe(200);
+    const body2 = await res2.json();
+    expect(body2.success).toBe(true);
+    expect(body2.workflowId).toBeNull(); // Ignored duplicate should return null workflowId
+  });
+
   it("should process payment.captured event and auto-resolve existing open workflows", async () => {
     // 1. First trigger a failed event to open a risk
     const failPaymentId = `pay_fail_to_resolve_${Date.now()}`;

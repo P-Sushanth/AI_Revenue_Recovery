@@ -153,6 +153,62 @@ describe("Stripe Webhook Integration Tests", () => {
     expect(["pending", "analyzing", "awaiting_approval", "completed", "executing"]).toContain(workflow.status);
   });
 
+  it("should process duplicate invoice.payment_failed event and ignore duplicate runs", async () => {
+    const invoiceId = `in_duplicate_test_${Date.now()}`;
+    const payload = {
+      id: `evt_stripe_duplicate_${Date.now()}`,
+      type: "invoice.payment_failed",
+      created: Math.floor(Date.now() / 1000),
+      data: {
+        object: {
+          id: invoiceId,
+          customer: "cus_alex_123",
+          subscription: "sub_alex_111",
+          amount_due: 249900,
+          currency: "INR",
+          attempt_count: 1,
+          last_payment_error: {
+            code: "card_expired",
+            decline_code: "expired_card",
+            message: "The card has expired."
+          }
+        }
+      }
+    };
+
+    const signature = generateSignatureHeader(payload);
+
+    // Call 1
+    const req1 = new Request("http://localhost:3000/api/webhooks/stripe", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "stripe-signature": signature,
+      },
+      body: JSON.stringify(payload),
+    });
+    const res1 = await POST(req1);
+    expect(res1.status).toBe(200);
+    const body1 = await res1.json();
+    expect(body1.success).toBe(true);
+    expect(body1.workflowId).toBeDefined();
+
+    // Call 2 (Duplicate)
+    const req2 = new Request("http://localhost:3000/api/webhooks/stripe", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "stripe-signature": signature,
+      },
+      body: JSON.stringify(payload),
+    });
+    const res2 = await POST(req2);
+    expect(res2.status).toBe(200);
+    const body2 = await res2.json();
+    expect(body2.success).toBe(true);
+    expect(body2.workflowId).toBeNull(); // Ignored duplicate should return null workflowId
+  });
+
   it("should process invoice.payment_succeeded event and auto-resolve existing open workflows", async () => {
     // 1. First trigger a failed event to open a risk
     const failInvoiceId = `in_fail_to_resolve_${Date.now()}`;
