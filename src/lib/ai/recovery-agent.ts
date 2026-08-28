@@ -93,6 +93,19 @@ export async function runAiAnalysis(workflowId: string): Promise<AiRecommendatio
     throw new Error(`Workflow with ID ${workflowId} not found: ${wfError?.message}`);
   }
 
+  // If the workflow is already completed or cancelled (e.g. resolved by a succeeded payment event), abort immediately!
+  if (workflow.status === "completed" || workflow.status === "cancelled") {
+    console.log(`Workflow ${workflowId} is already ${workflow.status}. Aborting AI analysis.`);
+    return {
+      diagnosis: "Workflow already completed.",
+      reasoning_summary: "No AI analysis needed since the workflow is already finished.",
+      recommended_action: "no_action",
+      urgency: "low",
+      customer_message_intent: "",
+      confidence: "high"
+    };
+  }
+
   const { data: risk, error: riskError } = await db
     .from("revenue_risks")
     .select("*")
@@ -214,7 +227,7 @@ Rules:
     const parsedJson = JSON.parse(cleaned);
     const recommendation = aiRecommendationSchema.parse(parsedJson);
 
-    // 5. Update recovery workflow
+    // 5. Update recovery workflow (only if it hasn't been completed or cancelled in the meantime)
     await db
       .from("recovery_workflows")
       .update({
@@ -222,7 +235,9 @@ Rules:
         recommended_action: recommendation.recommended_action,
         updated_at: new Date().toISOString(),
       })
-      .eq("id", workflowId);
+      .eq("id", workflowId)
+      .neq("status", "completed")
+      .neq("status", "cancelled");
 
     // 6. Write Audit Log
     await db.from("audit_logs").insert({
@@ -237,14 +252,16 @@ Rules:
   } catch (error: any) {
     console.error(`AI analysis failed for workflow ${workflowId}:`, error.message);
 
-    // Fallback: Mark workflow as failed on error
+    // Fallback: Mark workflow as failed on error atomically (only if it hasn't been completed or cancelled)
     await db
       .from("recovery_workflows")
       .update({
         status: "failed",
         updated_at: new Date().toISOString(),
       })
-      .eq("id", workflowId);
+      .eq("id", workflowId)
+      .neq("status", "completed")
+      .neq("status", "cancelled");
 
     await db.from("audit_logs").insert({
       workflow_id: workflowId,
