@@ -111,7 +111,7 @@ export default function Dashboard() {
     try {
       // Step 1: Normalization
       await new Promise((resolve) => setTimeout(resolve, 800));
-      setSimulationLogs(prev => [...prev, "✓ Normalized Stripe decline payload (expired_card)", "Inserting risk analysis into database..."]);
+      setSimulationLogs(prev => [...prev, "✓ Normalized Razorpay decline payload (expired_card)", "Inserting risk analysis into database..."]);
 
       // Step 2: Risk Scoring
       await new Promise((resolve) => setTimeout(resolve, 800));

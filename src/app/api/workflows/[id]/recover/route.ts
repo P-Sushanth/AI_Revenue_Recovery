@@ -68,7 +68,7 @@ export async function POST(
     const { data: successEvent, error: eventError } = await db
       .from("payment_events")
       .insert({
-        provider: "stripe",
+        provider: "razorpay",
         external_event_id: successEventId,
         customer_id: workflow.customer_id,
         subscription_id: workflow.subscription_id,

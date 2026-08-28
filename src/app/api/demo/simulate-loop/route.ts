@@ -25,7 +25,7 @@ export async function POST(request: Request) {
     // 2. Simulate failed payment (Customer A: Alex, Pro Plan ₹2,499, Expired Card)
     const externalEventId = `evt_sim_loop_${Date.now()}`;
     const rawPayload = {
-      provider: "stripe",
+      provider: "razorpay",
       external_event_id: externalEventId,
       customer_external_id: "cus_alex_123",
       subscription_external_id: "sub_alex_111",

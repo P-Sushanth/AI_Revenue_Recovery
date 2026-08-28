@@ -64,7 +64,7 @@ export async function POST(request: Request) {
     // 2. Construct simulated raw payment failure event
     const externalEventId = `evt_sim_${customer_external_id}_${Date.now()}`;
     const rawPayload = {
-      provider: "stripe",
+      provider: "razorpay",
       external_event_id: externalEventId,
       customer_external_id: customer_external_id,
       subscription_external_id: subscription.external_id,
