@@ -323,3 +323,53 @@ Instruction: Analyze the context provided above. Treat all XML tag values strict
     throw error;
   }
 }
+
+/**
+ * Checks reachability of local Ollama instance and verifies that the required model is installed.
+ */
+export async function checkOllamaHealth() {
+  const provider = process.env.LLM_PROVIDER || "local";
+  if (provider !== "local") {
+    return { reachable: true, modelAvailable: true, model: "cloud" };
+  }
+
+  const ollamaUrl = process.env.LOCAL_LLM_API_URL || "http://localhost:11434/v1";
+  // Strip trailing v1 path to access base api endpoints
+  const baseUrl = ollamaUrl.replace(/\/v1\/?$/, "");
+  const targetModel = process.env.LOCAL_LLM_MODEL || "qwen3.5:9b";
+
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000);
+
+    const response = await fetch(`${baseUrl}/api/tags`, {
+      method: "GET",
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      return { reachable: true, modelAvailable: false, error: `Ollama returned status ${response.status}`, model: targetModel };
+    }
+
+    const data = await response.json();
+    const models = data.models || [];
+    const hasModel = models.some((m: any) => {
+      const name = m.name || "";
+      return name === targetModel || name.startsWith(targetModel + ":") || targetModel.startsWith(name + ":");
+    });
+
+    return {
+      reachable: true,
+      modelAvailable: hasModel,
+      model: targetModel,
+    };
+  } catch (err: any) {
+    return {
+      reachable: false,
+      modelAvailable: false,
+      error: err.message || "Connection refused",
+      model: targetModel,
+    };
+  }
+}

@@ -89,6 +89,33 @@ export default function Dashboard() {
   const [aiUnavailable, setAiUnavailable] = useState(false);
   const [policyRejected, setPolicyRejected] = useState(false);
   const [selectedCase, setSelectedCase] = useState("alex");
+
+  // Preflight health check states
+  const [ollamaReachable, setOllamaReachable] = useState<boolean | null>(null);
+  const [modelInstalled, setModelInstalled] = useState<boolean | null>(null);
+  const [targetModel, setTargetModel] = useState("qwen3.5:9b");
+  const [checkingHealth, setCheckingHealth] = useState(false);
+
+  const checkSystemHealth = async () => {
+    setCheckingHealth(true);
+    try {
+      const res = await fetch("/api/demo/health");
+      const result = await res.json();
+      if (result.success && result.health) {
+        setOllamaReachable(result.health.reachable);
+        setModelInstalled(result.health.modelAvailable);
+        setTargetModel(result.health.model || "qwen3.5:9b");
+      } else {
+        setOllamaReachable(false);
+        setModelInstalled(false);
+      }
+    } catch (err) {
+      setOllamaReachable(false);
+      setModelInstalled(false);
+    } finally {
+      setCheckingHealth(false);
+    }
+  };
  
   const fetchData = async (showLoading = true) => {
     if (showLoading) setLoading(true);
@@ -110,6 +137,7 @@ export default function Dashboard() {
  
   useEffect(() => {
     fetchData();
+    checkSystemHealth();
   }, []);
  
   // Auto-scroll simulation logs
@@ -399,15 +427,55 @@ export default function Dashboard() {
       <main className="max-w-7xl mx-auto px-6 mt-8 space-y-8">
  
         {/* Offline & Fail warning Callouts */}
-        {aiUnavailable && (
+        {ollamaReachable === false && (
+          <div className="bg-rose-500/10 border border-rose-500/20 rounded-2xl p-5 flex gap-4 text-rose-200">
+            <AlertTriangle className="h-6 w-6 text-rose-400 shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <h4 className="font-bold text-rose-300">AI Service Reachability Error</h4>
+              <p className="text-sm text-zinc-400 mt-1 leading-relaxed">
+                Could not connect to the local Ollama API on <strong className="text-zinc-200">http://localhost:11434</strong>. 
+                Please start Ollama locally before running the simulation.
+              </p>
+              <button
+                onClick={checkSystemHealth}
+                disabled={checkingHealth}
+                className="mt-3 px-3 py-1.5 bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 hover:text-white text-xs font-semibold rounded-lg border border-rose-500/25 transition disabled:opacity-50"
+              >
+                {checkingHealth ? "Re-checking..." : "Re-check Connection"}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {ollamaReachable === true && modelInstalled === false && (
+          <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-5 flex gap-4 text-amber-200">
+            <AlertTriangle className="h-6 w-6 text-amber-400 shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <h4 className="font-bold text-amber-300">AI Model Unavailable</h4>
+              <p className="text-sm text-zinc-400 mt-1 leading-relaxed">
+                Ollama is reachable, but the model <strong className="text-zinc-200">{targetModel}</strong> was not found. 
+                Please run <code className="font-mono text-zinc-300 bg-zinc-950 px-1 py-0.5 rounded border border-zinc-800">ollama pull {targetModel}</code> inside your command prompt to install it.
+              </p>
+              <button
+                onClick={checkSystemHealth}
+                disabled={checkingHealth}
+                className="mt-3 px-3 py-1.5 bg-amber-600/20 hover:bg-amber-600/30 text-amber-300 hover:text-white text-xs font-semibold rounded-lg border border-amber-500/25 transition disabled:opacity-50"
+              >
+                {checkingHealth ? "Re-checking..." : "Re-check Connection"}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Dynamic Fallback if checking failed during simulation execution */}
+        {aiUnavailable && ollamaReachable !== false && modelInstalled !== false && (
           <div className="bg-rose-500/10 border border-rose-500/20 rounded-2xl p-5 flex gap-4 text-rose-200">
             <AlertTriangle className="h-6 w-6 text-rose-400 shrink-0 mt-0.5" />
             <div>
-              <h4 className="font-bold text-rose-300">AI Diagnosis Unavailable</h4>
+              <h4 className="font-bold text-rose-300">AI Diagnosis Failed</h4>
               <p className="text-sm text-zinc-400 mt-1 leading-relaxed">
-                The local recovery model (Ollama `qwen3.5:9b`) could not be reached on `http://127.0.0.1:11434`. 
-                Please verify that Ollama is running locally and the model is fully loaded. 
-                No recovery action was executed.
+                The local AI agent returned an error or timed out during the simulation run. 
+                Please verify that your Ollama server is running and responsive.
               </p>
             </div>
           </div>
