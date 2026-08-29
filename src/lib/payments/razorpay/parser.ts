@@ -1,5 +1,4 @@
 import { NormalizedPaymentEvent } from "../types";
-import { paiseToRupees } from "./amount";
 
 /**
  * Razorpay webhook event mapping constants.
@@ -93,7 +92,7 @@ export function parseRazorpayWebhook(payload: any): NormalizedPaymentEvent | nul
     external_event_id: paymentId,
     customer_external_id: customerExternalId,
     subscription_external_id: subscriptionExternalId,
-    amount: paiseToRupees(amountInPaise),
+    amount: amountInPaise / 100,
     currency: paymentEntity.currency || "INR",
     status: normalizedStatus,
     failure_code: failureCode,

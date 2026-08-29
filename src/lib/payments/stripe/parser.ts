@@ -1,5 +1,4 @@
 import { NormalizedPaymentEvent } from "../types";
-import { centsToMajor } from "./amount";
 import { PaymentFailureCode } from "../../schemas/database";
 
 /**
@@ -125,7 +124,7 @@ export function parseStripeWebhook(payload: any): NormalizedPaymentEvent | null 
     external_event_id: invoiceId, // Conforming to Stripe Webhook logic where the invoice ID maps to the transaction event sequence
     customer_external_id: customerId,
     subscription_external_id: subscriptionId,
-    amount: centsToMajor(cents),
+    amount: cents / 100,
     currency: (invoice.currency || "usd").toUpperCase(),
     status: normalizedStatus,
     failure_code: failureCode,
