@@ -2,8 +2,15 @@ import { NextResponse } from "next/server";
 import { seedDemoData } from "@/lib/demo/demo-data";
 
 export async function POST() {
+  if (process.env.NODE_ENV === "production" && process.env.ALLOW_DEMO_ROUTES !== "true") {
+    return NextResponse.json({
+      success: false,
+      message: "Forbidden: Demo endpoints are disabled in production mode.",
+    }, { status: 403 });
+  }
+
   try {
-    const ids = await seedDemoData();
+    const ids = await seedDemoData(true);
     return NextResponse.json({
       success: true,
       message: "Database cleanup complete and demo customer profiles seeded successfully.",

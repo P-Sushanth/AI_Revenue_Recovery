@@ -237,10 +237,14 @@ export async function processPaymentEvent(payload: unknown): Promise<ProcessEven
     if (activeRisks && activeRisks.length > 0) {
       const activeRiskIds = activeRisks.map((r: { id: string }) => r.id);
 
-      // Resolve Risks
+      // Resolve Risks: update status and set amount_at_risk to actual payment amount
       await db
         .from("revenue_risks")
-        .update({ status: "recovered", updated_at: new Date().toISOString() })
+        .update({
+          status: "recovered",
+          amount_at_risk: paymentEvent.amount,
+          updated_at: new Date().toISOString()
+        })
         .in("id", activeRiskIds);
 
       // Resolve Recovery Workflows

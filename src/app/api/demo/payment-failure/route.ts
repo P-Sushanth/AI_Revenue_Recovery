@@ -3,6 +3,13 @@ import { getDbClient } from "@/lib/db/client";
 import { processPaymentEvent } from "@/lib/recovery/process-payment-event";
 
 export async function POST(request: Request) {
+  if (process.env.NODE_ENV === "production" && process.env.ALLOW_DEMO_ROUTES !== "true") {
+    return NextResponse.json({
+      success: false,
+      message: "Forbidden: Demo endpoints are disabled in production mode.",
+    }, { status: 403 });
+  }
+
   try {
     const body = await request.json();
     const { customer_external_id, failure_code, attempt_number } = body;

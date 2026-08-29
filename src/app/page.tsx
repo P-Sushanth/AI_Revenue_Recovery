@@ -50,6 +50,17 @@ interface DashboardData {
   recoveryOutcomesData: { name: string; value: number; color?: string }[];
 }
  
+const getCustomerIdByCase = (c: string) => {
+  switch (c) {
+    case "alex": return "11111111-1111-1111-1111-111111111111";
+    case "sarah": return "22222222-2222-2222-2222-222222222222";
+    case "john": return "33333333-3333-3333-3333-333333333333";
+    case "maya": return "44444444-4444-4444-4444-444444444444";
+    case "daniel": return "55555555-5555-5555-5555-555555555555";
+    default: return "11111111-1111-1111-1111-111111111111";
+  }
+};
+
 export default function Dashboard() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -77,6 +88,7 @@ export default function Dashboard() {
   const [currentWorkflowId, setCurrentWorkflowId] = useState<string | null>(null);
   const [aiUnavailable, setAiUnavailable] = useState(false);
   const [policyRejected, setPolicyRejected] = useState(false);
+  const [selectedCase, setSelectedCase] = useState("alex");
  
   const fetchData = async (showLoading = true) => {
     if (showLoading) setLoading(true);
@@ -163,29 +175,43 @@ export default function Dashboard() {
     }
   };
  
+  const getCaseLabel = (c: string) => {
+    switch (c) {
+      case "alex": return "Alex (Pro Plan ₹2499, Expired Card)";
+      case "sarah": return "Sarah (Business Plan ₹7999, 3D-Secure Auth Required)";
+      case "john": return "John (Starter Plan ₹499, Insufficient Funds)";
+      case "maya": return "Maya (Pro Plan ₹2499, 4th Consecutive Failure)";
+      case "daniel": return "Daniel (Pro Plan ₹2499, Cancelled Status)";
+      default: return "Alex";
+    }
+  };
+
   // Run Guided Decline & Recovery Simulation
   const handleRunSimulation = async () => {
     setSimulating(true);
     setDemoStep(1);
     setAiUnavailable(false);
     setPolicyRejected(false);
-    setSimulationLogs(["Initializing billing decline event trigger...", "Customer profile: Alex (Active, Pro Plan ₹2499)"]);
+    setSimulationLogs(["Initializing billing decline event trigger...", `Customer profile: ${getCaseLabel(selectedCase)}`]);
  
     try {
       // Step 1: Normalization
       await new Promise((resolve) => setTimeout(resolve, 800));
       setDemoStep(2);
-      setSimulationLogs(prev => [...prev, "✓ Normalized Razorpay decline payload (expired_card)", "Inserting risk analysis into database..."]);
+      const code = selectedCase === "sarah" ? "authentication_required" : selectedCase === "john" ? "insufficient_funds" : selectedCase === "maya" ? "card_declined" : "expired_card";
+      setSimulationLogs(prev => [...prev, `✓ Normalized Razorpay decline payload (${code})`, "Inserting risk analysis into database..."]);
  
       // Step 2: Risk Scoring
       await new Promise((resolve) => setTimeout(resolve, 800));
       setDemoStep(3);
-      setSimulationLogs(prev => [...prev, "✓ Risk score calculated: 75/100 (CRITICAL)", "✓ Recoverability index: 85/100 (HIGH)", "Workflow registered: STATUS PENDING"]);
+      const score = selectedCase === "john" ? "15/100 (LOW)" : selectedCase === "maya" ? "90/100 (CRITICAL)" : "75/100 (CRITICAL)";
+      const index = selectedCase === "john" ? "10/100 (LOW)" : "85/100 (HIGH)";
+      setSimulationLogs(prev => [...prev, `✓ Risk score calculated: ${score}`, `✓ Recoverability index: ${index}`, "Workflow registered: STATUS PENDING"]);
  
       // Step 3: LLM Analysis (Calls /api/demo/simulate-loop)
       setSimulationLogs(prev => [...prev, "Invocating local Ollama Qwen model... (Please wait)"]);
       
-      const res = await fetch("/api/demo/simulate-loop", { method: "POST" });
+      const res = await fetch(`/api/demo/simulate-loop?case=${selectedCase}`, { method: "POST" });
       const result = await res.json();
  
       if (result.success) {
@@ -334,20 +360,37 @@ export default function Dashboard() {
             <button
               onClick={handleSeedDatabase}
               disabled={seeding}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white rounded-lg transition border border-zinc-800 disabled:opacity-50"
+              aria-label="Reset simulation seeds"
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white rounded-lg transition border border-zinc-800 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-blue-600"
             >
               <Database className="h-4 w-4" />
               {seeding ? "Resetting..." : "Reset Seeds"}
             </button>
  
-            <button
-              onClick={handleRunSimulation}
-              disabled={simulating}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-lg shadow-lg shadow-blue-600/20 transition disabled:opacity-50"
-            >
-              <Zap className="h-4 w-4" />
-              {simulating ? "Inference Processing..." : "Run Recovery Demo"}
-            </button>
+            <div className="flex items-center bg-zinc-900 border border-zinc-800 rounded-lg p-1">
+              <select
+                value={selectedCase}
+                onChange={(e) => setSelectedCase(e.target.value)}
+                disabled={simulating}
+                aria-label="Select demo customer simulation case"
+                className="bg-transparent text-xs font-semibold text-zinc-300 px-3 py-1.5 focus:outline-none cursor-pointer disabled:opacity-50"
+              >
+                <option value="alex" className="bg-zinc-950 text-zinc-300">Alex (Expired Card - Success)</option>
+                <option value="sarah" className="bg-zinc-950 text-zinc-300">Sarah (3DS Auth Needed - Success)</option>
+                <option value="john" className="bg-zinc-950 text-zinc-300">John (Low Risk - Policy Blocked)</option>
+                <option value="maya" className="bg-zinc-950 text-zinc-300">Maya (Multiple Declines - Success)</option>
+                <option value="daniel" className="bg-zinc-950 text-zinc-300">Daniel (Cancelled Sub - Policy Blocked)</option>
+              </select>
+              <button
+                onClick={handleRunSimulation}
+                disabled={simulating}
+                aria-label="Run demo recovery process"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white rounded transition disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <Zap className="h-3.5 w-3.5" />
+                {simulating ? "Processing..." : "Run Demo"}
+              </button>
+            </div>
           </div>
         </div>
       </header>
@@ -481,7 +524,7 @@ export default function Dashboard() {
                       Click below to open the portal and submit card details.
                     </p>
                     <a 
-                      href="/update-payment?customer_id=11111111-1111-1111-1111-111111111111"
+                      href={`/update-payment?customer_id=${getCustomerIdByCase(selectedCase)}`}
                       target="_blank"
                       rel="noreferrer"
                       className="mt-4 w-full py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-semibold transition inline-flex items-center justify-center gap-1.5 shadow-md shadow-blue-500/10"
@@ -494,7 +537,9 @@ export default function Dashboard() {
                   <>
                     <CheckCircle className="h-12 w-12 text-emerald-400 mb-3" />
                     <h4 className="font-bold text-emerald-400 text-sm uppercase tracking-wider">Recovery Succeeded!</h4>
-                    <strong className="text-white text-2xl mt-1.5 font-bold">{formatINR(2499)} Recovered</strong>
+                    <strong className="text-white text-2xl mt-1.5 font-bold">
+                      {formatINR(selectedCase === "sarah" ? 7999 : selectedCase === "john" ? 499 : 2499)} Recovered
+                    </strong>
                     <p className="text-xs text-zinc-400 mt-2 max-w-xs leading-relaxed">
                       Customer updated their billing info successfully. 
                       The workflow has been set to <strong>Completed</strong> and subscription status is restored to <strong>Active</strong>.
@@ -609,7 +654,7 @@ export default function Dashboard() {
             <p className="text-xs text-zinc-500 mt-0.5">Chronological trends of recovered revenue vs. unresolved revenue at risk</p>
           </div>
           
-          <div className="h-64 relative">
+          <div className="h-64 relative" role="region" aria-label="Line chart showing Revenue Recovery trends over time">
             {loading ? (
               <div className="absolute inset-0 flex items-center justify-center text-xs text-zinc-500">
                 <RefreshCw className="h-8 w-8 animate-spin text-blue-500" />
@@ -646,7 +691,7 @@ export default function Dashboard() {
               <p className="text-xs text-zinc-500 mt-0.5">Active customer accounts grouped by churn risk score level</p>
             </div>
             
-            <div className="h-64 relative">
+            <div className="h-64 relative" role="region" aria-label="Bar chart showing Customer Risk Level distribution">
               {loading ? (
                 <div className="absolute inset-0 flex items-center justify-center text-xs text-zinc-500">
                   <RefreshCw className="h-8 w-8 animate-spin text-blue-500" />
@@ -678,7 +723,7 @@ export default function Dashboard() {
               <p className="text-xs text-zinc-500 mt-0.5">Current statuses of triggered automated interventions</p>
             </div>
             
-            <div className="h-64 flex justify-center items-center relative">
+            <div className="h-64 flex justify-center items-center relative" role="region" aria-label="Pie chart showing Recovery Intervention Outcomes">
               {loading ? (
                 <div className="absolute inset-0 flex items-center justify-center text-xs text-zinc-500">
                   <RefreshCw className="h-8 w-8 animate-spin text-blue-500" />
@@ -843,7 +888,7 @@ export default function Dashboard() {
                           </td>
                           <td className="px-6 py-4 text-center">
                             <span
-                              className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${
                                 risk.risk_level === "critical"
                                   ? "bg-rose-500/10 text-rose-400 border border-rose-500/20"
                                   : risk.risk_level === "high"
@@ -851,6 +896,7 @@ export default function Dashboard() {
                                   : "bg-blue-500/10 text-blue-400 border border-blue-500/20"
                               }`}
                             >
+                              <AlertTriangle className="h-3 w-3 shrink-0" />
                               {risk.risk_score} — {risk.risk_level}
                             </span>
                           </td>
@@ -867,7 +913,22 @@ export default function Dashboard() {
                                   : "bg-zinc-500/10 text-zinc-400 border-zinc-700/20"
                               }`}
                             >
-                              {risk.status === "in_recovery" ? "Email Sent" : risk.status}
+                              {risk.status === "recovered" ? (
+                                <>
+                                  <Check className="h-3 w-3 shrink-0 text-emerald-400" />
+                                  <span>Recovered</span>
+                                </>
+                              ) : risk.status === "in_recovery" ? (
+                                <>
+                                  <Mail className="h-3 w-3 shrink-0 text-purple-400" />
+                                  <span>Email Sent</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Info className="h-3 w-3 shrink-0 text-zinc-400" />
+                                  <span className="capitalize">{risk.status}</span>
+                                </>
+                              )}
                             </span>
                           </td>
                           <td className="px-6 py-4 text-right">

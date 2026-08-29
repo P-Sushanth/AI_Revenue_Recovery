@@ -5,38 +5,86 @@ import { runAiAnalysis } from "@/lib/ai/recovery-agent";
 import { executeRecoveryAction } from "@/lib/recovery/action-executor";
 
 export async function POST(request: Request) {
+  if (process.env.NODE_ENV === "production" && process.env.ALLOW_DEMO_ROUTES !== "true") {
+    return NextResponse.json({
+      success: false,
+      message: "Forbidden: Demo endpoints are disabled in production mode.",
+    }, { status: 403 });
+  }
+
   try {
     const db = getDbClient(true);
+
+    // Check if a specific case is requested (e.g., query params)
+    const { searchParams } = new URL(request.url);
+    const selectedCase = searchParams.get("case") || "alex";
+
+    let customerExternalId = "cus_alex_123";
+    let subscriptionExternalId = "sub_alex_111";
+    let amount = 2499.00;
+    let failureCode = "expired_card";
+    let failureMessage = "Simulated expired card decline";
+    let attemptNumber = 1;
+
+    if (selectedCase === "sarah") {
+      customerExternalId = "cus_sarah_456";
+      subscriptionExternalId = "sub_sarah_222";
+      amount = 7999.00;
+      failureCode = "authentication_required";
+      failureMessage = "Authentication required (3D Secure validation failed)";
+      attemptNumber = 1;
+    } else if (selectedCase === "john") {
+      customerExternalId = "cus_john_789";
+      subscriptionExternalId = "sub_john_333";
+      amount = 499.00;
+      failureCode = "insufficient_funds";
+      failureMessage = "The account has insufficient funds to complete the payment.";
+      attemptNumber = 1;
+    } else if (selectedCase === "maya") {
+      customerExternalId = "cus_maya_101";
+      subscriptionExternalId = "sub_maya_444";
+      amount = 2499.00;
+      failureCode = "card_declined";
+      failureMessage = "Generic bank decline event";
+      attemptNumber = 4; // Multiple declines trigger critical risk level
+    } else if (selectedCase === "daniel") {
+      customerExternalId = "cus_daniel_202";
+      subscriptionExternalId = "sub_daniel_555";
+      amount = 2499.00;
+      failureCode = "expired_card";
+      failureMessage = "Subscription already cancelled";
+      attemptNumber = 1;
+    }
 
     // 1. Ensure we have seeded data
     const { data: customer } = await db
       .from("customers")
       .select("external_id")
-      .eq("external_id", "cus_alex_123")
+      .eq("external_id", customerExternalId)
       .maybeSingle();
 
     if (!customer) {
       return NextResponse.json({
         success: false,
-        message: "No demo customer found. Please visit /api/demo/seed first to seed the database.",
+        message: `No demo customer for case "${selectedCase}" found. Please seed the database first.`,
       }, { status: 400 });
     }
 
-    // 2. Simulate failed payment (Customer A: Alex, Pro Plan ₹2,499, Expired Card)
+    // 2. Simulate failed payment
     const externalEventId = `evt_sim_loop_${Date.now()}`;
     const rawPayload = {
       provider: "razorpay",
       external_event_id: externalEventId,
-      customer_external_id: "cus_alex_123",
-      subscription_external_id: "sub_alex_111",
-      amount: 2499.00,
+      customer_external_id: customerExternalId,
+      subscription_external_id: subscriptionExternalId,
+      amount,
       currency: "INR",
       status: "failed" as const,
-      failure_code: "expired_card" as const,
-      failure_message: "Simulated expired card decline",
-      attempt_number: 1,
+      failure_code: failureCode as any,
+      failure_message: failureMessage,
+      attempt_number: attemptNumber,
       occurred_at: new Date().toISOString(),
-      raw_payload: { simulation: true, trigger: "simulate-loop" },
+      raw_payload: { simulation: true, trigger: "simulate-loop", case: selectedCase },
     };
 
     console.log("Simulating payment failure event...");

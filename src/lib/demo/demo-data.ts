@@ -1,5 +1,6 @@
 import { randomUUID } from "crypto";
 import { getDbClient } from "../db/client";
+import { processPaymentEvent } from "../recovery/process-payment-event";
 
 // Types for seeding
 interface CustomerSeed {
@@ -39,7 +40,7 @@ interface PaymentEventSeed {
   raw_payload?: any;
 }
 
-export async function seedDemoData() {
+export async function seedDemoData(triggerActiveFailures = false) {
   const db = getDbClient(true); // Get the admin client to bypass RLS
 
   console.log("Starting database cleanup...");
@@ -203,6 +204,90 @@ export async function seedDemoData() {
   console.log("Seeding payment events...");
   if (paymentEvents.length > 0) {
     await db.from("payment_events").insert(paymentEvents);
+  }
+
+  if (triggerActiveFailures) {
+    console.log("Triggering active payment failures to populate risks...");
+
+    // 1. Alex - Expired Card
+    await processPaymentEvent({
+      provider: "razorpay",
+      external_event_id: `evt_seed_fail_alex_${Date.now()}`,
+      customer_external_id: "cus_alex_123",
+      subscription_external_id: "sub_alex_111",
+      amount: 2499.00,
+      currency: "INR",
+      status: "failed",
+      failure_code: "expired_card",
+      failure_message: "Simulated expired card decline",
+      attempt_number: 1,
+      occurred_at: new Date().toISOString(),
+      raw_payload: { seed: true }
+    });
+
+    // 2. Sarah - Authentication Required
+    await processPaymentEvent({
+      provider: "razorpay",
+      external_event_id: `evt_seed_fail_sarah_${Date.now()}`,
+      customer_external_id: "cus_sarah_456",
+      subscription_external_id: "sub_sarah_222",
+      amount: 7999.00,
+      currency: "INR",
+      status: "failed",
+      failure_code: "authentication_required",
+      failure_message: "Authentication required (3D Secure validation failed)",
+      attempt_number: 1,
+      occurred_at: new Date().toISOString(),
+      raw_payload: { seed: true }
+    });
+
+    // 3. John - Insufficient Funds
+    await processPaymentEvent({
+      provider: "razorpay",
+      external_event_id: `evt_seed_fail_john_${Date.now()}`,
+      customer_external_id: "cus_john_789",
+      subscription_external_id: "sub_john_333",
+      amount: 499.00,
+      currency: "INR",
+      status: "failed",
+      failure_code: "insufficient_funds",
+      failure_message: "The account has insufficient funds to complete the payment.",
+      attempt_number: 1,
+      occurred_at: new Date().toISOString(),
+      raw_payload: { seed: true }
+    });
+
+    // 4. Maya - Multiple Declines (4th Attempt)
+    await processPaymentEvent({
+      provider: "razorpay",
+      external_event_id: `evt_seed_fail_maya_${Date.now()}`,
+      customer_external_id: "cus_maya_101",
+      subscription_external_id: "sub_maya_444",
+      amount: 2499.00,
+      currency: "INR",
+      status: "failed",
+      failure_code: "card_declined",
+      failure_message: "Generic bank decline event",
+      attempt_number: 4,
+      occurred_at: new Date().toISOString(),
+      raw_payload: { seed: true }
+    });
+
+    // 5. Daniel - Cancelled Subscription
+    await processPaymentEvent({
+      provider: "razorpay",
+      external_event_id: `evt_seed_fail_daniel_${Date.now()}`,
+      customer_external_id: "cus_daniel_202",
+      subscription_external_id: "sub_daniel_555",
+      amount: 2499.00,
+      currency: "INR",
+      status: "failed",
+      failure_code: "expired_card",
+      failure_message: "Card expired",
+      attempt_number: 1,
+      occurred_at: new Date().toISOString(),
+      raw_payload: { seed: true }
+    });
   }
 
   console.log("Seeding finished successfully!");
