@@ -131,6 +131,12 @@ export async function processPaymentEvent(payload: unknown): Promise<ProcessEven
       throw new Error("Cannot process a payment failure risk without an associated subscription.");
     }
 
+    // Update subscription status to past_due to activate checkout portal inputs
+    await db
+      .from("subscriptions")
+      .update({ status: "past_due" })
+      .eq("id", subscription.id);
+
     // Fetch historical payment events to calculate risk score properly
     const { data: history, error: historyError } = await db
       .from("payment_events")
@@ -221,6 +227,11 @@ export async function processPaymentEvent(payload: unknown): Promise<ProcessEven
 
   // 7. Workflow Logic: Succeeded Payment -> Resolve open risks/workflows
   if (paymentEvent.status === "succeeded" && subscription) {
+    // Update subscription status back to active upon successful recovery payment
+    await db
+      .from("subscriptions")
+      .update({ status: "active" })
+      .eq("id", subscription.id);
     // Find open or in_recovery risks for this subscription
     const { data: activeRisks, error: activeError } = await db
       .from("revenue_risks")
