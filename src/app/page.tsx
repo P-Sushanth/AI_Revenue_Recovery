@@ -371,7 +371,7 @@ export default function Dashboard() {
   }
  
   return (
-    <div className="min-h-screen bg-[#fafafa] text-neutral-900 font-sans selection:bg-neutral-200 selection:text-neutral-900 pb-16">
+    <div className="min-h-screen bg-[#F7F2EC] text-neutral-900 font-sans selection:bg-[#E2D4C5] selection:text-neutral-900 pb-16">
       
       {/* Header */}
       <header className="border-b border-neutral-200 bg-white/80 backdrop-blur-md sticky top-0 z-40">
