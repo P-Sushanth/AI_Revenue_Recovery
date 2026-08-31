@@ -19,6 +19,10 @@ import {
   Info,
   BarChart3,
   Filter,
+  Sparkles,
+  Terminal,
+  FileText,
+  Send,
 } from "lucide-react";
  
 // Bklit UI components
@@ -97,6 +101,41 @@ export default function Dashboard() {
   const [modelInstalled, setModelInstalled] = useState<boolean | null>(null);
   const [targetModel, setTargetModel] = useState("qwen3.5:9b");
   const [checkingHealth, setCheckingHealth] = useState(false);
+
+  // Raw Bank Log AI Explainer state
+  const [rawBankLog, setRawBankLog] = useState("");
+  const [analyzingRawLog, setAnalyzingRawLog] = useState(false);
+  const [rawAnalysisResult, setRawAnalysisResult] = useState<any>(null);
+  const [rawAnalysisError, setRawAnalysisError] = useState<string | null>(null);
+
+  const handleAnalyzeRawLog = async (logText?: string) => {
+    const textToAnalyze = logText !== undefined ? logText : rawBankLog;
+    if (!textToAnalyze.trim()) return;
+
+    if (logText !== undefined) {
+      setRawBankLog(logText);
+    }
+
+    setAnalyzingRawLog(true);
+    setRawAnalysisError(null);
+
+    try {
+      const res = await fetch("/api/demo/analyze-raw-log", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rawMessage: textToAnalyze }),
+      });
+      const result = await res.json();
+      if (!result.success) {
+        throw new Error(result.error || "Analysis failed.");
+      }
+      setRawAnalysisResult(result.data);
+    } catch (err: any) {
+      setRawAnalysisError(err.message || "Failed to analyze raw bank log.");
+    } finally {
+      setAnalyzingRawLog(false);
+    }
+  };
 
   const checkSystemHealth = async () => {
     setCheckingHealth(true);
@@ -826,7 +865,186 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
- 
+
+        {/* Interactive Raw Bank Log AI Explainer (Live Demo Component) */}
+        <div className="bg-white border border-neutral-200 rounded-2xl p-6 shadow-sm space-y-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-neutral-100 pb-4">
+            <div className="flex items-center gap-3">
+              <div className="bg-neutral-900 p-2.5 rounded-xl text-white shadow-sm">
+                <Sparkles className="h-5 w-5" />
+              </div>
+              <div>
+                <h3 className="font-bold text-neutral-900 text-sm uppercase tracking-wider flex items-center gap-2">
+                  Raw Bank Log AI Explainer
+                  <span className="bg-neutral-100 text-neutral-600 text-[10px] font-semibold px-2 py-0.5 rounded-full border border-neutral-200 uppercase">Interactive Playground</span>
+                </h3>
+                <p className="text-xs text-neutral-500 mt-0.5">
+                  Test how local Ollama AI interprets raw, unstructured, non-standardized bank decline text in real-time.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* Input column */}
+            <div className="lg:col-span-6 space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-neutral-700 uppercase tracking-wider mb-2">
+                  Sample Raw Bank Decline Scenarios
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const text = "Transaction blocked by HDFC fraud system due to 24h international velocity cap";
+                      setRawBankLog(text);
+                      handleAnalyzeRawLog(text);
+                    }}
+                    className="text-left text-xs p-2.5 rounded-xl bg-neutral-50 hover:bg-neutral-100 border border-neutral-200 text-neutral-700 font-medium transition flex items-center justify-between group"
+                  >
+                    <span className="truncate">HDFC Velocity Cap</span>
+                    <ChevronRight className="h-3.5 w-3.5 text-neutral-400 group-hover:translate-x-0.5 transition shrink-0" />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const text = "Processor error 05: Do Not Honor - Cardholder account frozen under RBI e-mandate regulatory check";
+                      setRawBankLog(text);
+                      handleAnalyzeRawLog(text);
+                    }}
+                    className="text-left text-xs p-2.5 rounded-xl bg-neutral-50 hover:bg-neutral-100 border border-neutral-200 text-neutral-700 font-medium transition flex items-center justify-between group"
+                  >
+                    <span className="truncate">RBI E-Mandate Freeze</span>
+                    <ChevronRight className="h-3.5 w-3.5 text-neutral-400 group-hover:translate-x-0.5 transition shrink-0" />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const text = "Issuer decline: Merchant Category Code (MCC 5734) prohibited for recurring billing on debit card";
+                      setRawBankLog(text);
+                      handleAnalyzeRawLog(text);
+                    }}
+                    className="text-left text-xs p-2.5 rounded-xl bg-neutral-50 hover:bg-neutral-100 border border-neutral-200 text-neutral-700 font-medium transition flex items-center justify-between group"
+                  >
+                    <span className="truncate">MCC Recurring Block</span>
+                    <ChevronRight className="h-3.5 w-3.5 text-neutral-400 group-hover:translate-x-0.5 transition shrink-0" />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const text = "Gateway returned Token Invalid: Card expiration date passed (08/26)";
+                      setRawBankLog(text);
+                      handleAnalyzeRawLog(text);
+                    }}
+                    className="text-left text-xs p-2.5 rounded-xl bg-neutral-50 hover:bg-neutral-100 border border-neutral-200 text-neutral-700 font-medium transition flex items-center justify-between group"
+                  >
+                    <span className="truncate">Expired Card Token</span>
+                    <ChevronRight className="h-3.5 w-3.5 text-neutral-400 group-hover:translate-x-0.5 transition shrink-0" />
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-neutral-700 uppercase tracking-wider mb-2">
+                  Custom Raw Decline Log Input
+                </label>
+                <textarea
+                  rows={3}
+                  value={rawBankLog}
+                  onChange={(e) => setRawBankLog(e.target.value)}
+                  placeholder="Paste or type any raw processor/bank decline error message here..."
+                  className="w-full bg-neutral-50 border border-neutral-200 rounded-xl p-3 text-xs text-neutral-800 placeholder-neutral-400 focus:outline-none focus:border-neutral-400 focus:ring-1 focus:ring-neutral-400 transition"
+                />
+              </div>
+
+              <button
+                type="button"
+                onClick={() => handleAnalyzeRawLog()}
+                disabled={analyzingRawLog || !rawBankLog.trim()}
+                className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-neutral-900 hover:bg-neutral-800 text-white rounded-xl text-xs font-bold transition disabled:opacity-50 shadow-sm"
+              >
+                {analyzingRawLog ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 animate-spin" />
+                    Ollama Qwen AI Analyzing...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-4 w-4" />
+                    Analyze Raw Log with Ollama AI
+                  </>
+                )}
+              </button>
+            </div>
+
+            {/* Result column */}
+            <div className="lg:col-span-6 bg-neutral-50 border border-neutral-200 rounded-xl p-5 flex flex-col justify-between">
+              {rawAnalysisError && (
+                <div className="bg-rose-50 border border-rose-100 text-rose-900 rounded-xl p-4 text-xs">
+                  <strong className="font-bold text-rose-800 block mb-1">Analysis Error:</strong>
+                  {rawAnalysisError}
+                </div>
+              )}
+
+              {!rawAnalysisResult && !rawAnalysisError && (
+                <div className="h-full flex flex-col items-center justify-center text-center p-6 text-neutral-400">
+                  <Terminal className="h-10 w-10 mb-3 text-neutral-300" />
+                  <p className="text-xs font-medium text-neutral-500">No active log analyzed yet</p>
+                  <p className="text-[11px] text-neutral-400 mt-1 max-w-xs leading-relaxed">
+                    Click a preset scenario above or enter a custom raw bank decline message to run local AI diagnosis.
+                  </p>
+                </div>
+              )}
+
+              {rawAnalysisResult && (
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center border-b border-neutral-200/60 pb-3">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 flex items-center gap-1.5">
+                      <Sparkles className="h-3.5 w-3.5 text-neutral-700" />
+                      AI Extracted Diagnosis
+                    </span>
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 uppercase">
+                      Confidence: {rawAnalysisResult.confidence}
+                    </span>
+                  </div>
+
+                  <div>
+                    <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider block">Extracted Technical Cause</span>
+                    <p className="text-xs font-semibold text-neutral-800 mt-0.5 leading-relaxed">
+                      {rawAnalysisResult.technical_root_cause}
+                    </p>
+                  </div>
+
+                  <div>
+                    <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider block">Customer-Friendly Translation</span>
+                    <p className="text-xs text-neutral-600 mt-0.5 leading-relaxed bg-white border border-neutral-200 rounded-lg p-3">
+                      "{rawAnalysisResult.customer_explanation}"
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 pt-1">
+                    <div>
+                      <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider block">Recommended Action</span>
+                      <span className="inline-block mt-1 px-2.5 py-1 bg-neutral-900 text-white font-mono text-[10px] font-bold rounded-md">
+                        {rawAnalysisResult.recommended_action}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider block">Urgency Rating</span>
+                      <span className="inline-block mt-1 px-2.5 py-1 bg-amber-50 text-amber-800 border border-amber-200 font-mono text-[10px] font-bold rounded-md capitalize">
+                        {rawAnalysisResult.urgency} Urgency
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
         {/* At-Risk Customers Table & Timeline logs */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           
