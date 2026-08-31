@@ -371,20 +371,20 @@ export default function Dashboard() {
   }
  
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-50 font-sans selection:bg-blue-600 selection:text-white pb-16">
+    <div className="min-h-screen bg-[#fafafa] text-neutral-900 font-sans selection:bg-neutral-200 selection:text-neutral-900 pb-16">
       
       {/* Header */}
-      <header className="border-b border-zinc-800/80 bg-zinc-900/40 backdrop-blur-md sticky top-0 z-40">
+      <header className="border-b border-neutral-200 bg-white/80 backdrop-blur-md sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-6 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-3">
-            <div className="bg-gradient-to-tr from-blue-600 to-indigo-500 p-2.5 rounded-xl shadow-lg shadow-blue-500/20">
-              <Zap className="h-6 w-6 text-white" />
+            <div className="bg-neutral-900 p-2.5 rounded-xl shadow-sm">
+              <Zap className="h-5 w-5 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold tracking-tight bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent">
+              <h1 className="text-xl font-bold tracking-tight text-neutral-900">
                 RecoverAI
               </h1>
-              <p className="text-xs text-zinc-500">Autonomous Billing Intervention & Risk Management</p>
+              <p className="text-xs text-neutral-500">Autonomous Billing Intervention & Risk Management</p>
             </div>
           </div>
  
@@ -393,33 +393,33 @@ export default function Dashboard() {
               onClick={handleSeedDatabase}
               disabled={seeding}
               aria-label="Reset simulation seeds"
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white rounded-lg transition border border-zinc-800 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-blue-600"
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-white hover:bg-neutral-50 text-neutral-600 hover:text-neutral-900 rounded-lg transition border border-neutral-200 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-neutral-200"
             >
               <Database className="h-4 w-4" />
               {seeding ? "Resetting..." : "Reset Seeds"}
             </button>
  
-            <div className="flex items-center bg-zinc-900 border border-zinc-800 rounded-lg p-1">
+            <div className="flex items-center bg-white border border-neutral-200 rounded-lg p-1">
               <select
                 value={selectedCase}
                 onChange={(e) => setSelectedCase(e.target.value)}
                 disabled={simulating}
                 aria-label="Select demo customer simulation case"
-                className="bg-transparent text-xs font-semibold text-zinc-300 px-3 py-1.5 focus:outline-none cursor-pointer disabled:opacity-50"
+                className="bg-transparent text-xs font-semibold text-neutral-700 px-3 py-1.5 focus:outline-none cursor-pointer disabled:opacity-50"
               >
-                <option value="alex" className="bg-zinc-950 text-zinc-300">Alex (Expired Card - Success)</option>
-                <option value="sarah" className="bg-zinc-950 text-zinc-300">Sarah (3DS Auth Needed - Success)</option>
-                <option value="john" className="bg-zinc-950 text-zinc-300">John (Low Risk - Policy Blocked)</option>
-                <option value="maya" className="bg-zinc-950 text-zinc-300">Maya (Multiple Declines - Success)</option>
-                <option value="daniel" className="bg-zinc-950 text-zinc-300">Daniel (Cancelled Sub - Policy Blocked)</option>
-                <option value="clara" className="bg-zinc-950 text-zinc-300">Clara (Paused - Medium Risk)</option>
-                <option value="james" className="bg-zinc-950 text-zinc-300">James (Cancelled - Low/Medium Risk)</option>
+                <option value="alex" className="bg-white text-neutral-800">Alex (Expired Card - Success)</option>
+                <option value="sarah" className="bg-white text-neutral-800">Sarah (3DS Auth Needed - Success)</option>
+                <option value="john" className="bg-white text-neutral-800">John (Low Risk - Policy Blocked)</option>
+                <option value="maya" className="bg-white text-neutral-800">Maya (Multiple Declines - Success)</option>
+                <option value="daniel" className="bg-white text-neutral-800">Daniel (Cancelled Sub - Policy Blocked)</option>
+                <option value="clara" className="bg-white text-neutral-800">Clara (Paused - Medium Risk)</option>
+                <option value="james" className="bg-white text-neutral-800">James (Cancelled - Low/Medium Risk)</option>
               </select>
               <button
                 onClick={handleRunSimulation}
                 disabled={simulating}
                 aria-label="Run demo recovery process"
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white rounded transition disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-neutral-900 hover:bg-neutral-800 text-white rounded transition disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-neutral-200"
               >
                 <Zap className="h-3.5 w-3.5" />
                 {simulating ? "Processing..." : "Run Demo"}
@@ -431,21 +431,20 @@ export default function Dashboard() {
  
       {/* Main Container */}
       <main className="max-w-7xl mx-auto px-6 mt-8 space-y-8">
- 
         {/* Offline & Fail warning Callouts */}
         {ollamaReachable === false && (
-          <div className="bg-rose-500/10 border border-rose-500/20 rounded-2xl p-5 flex gap-4 text-rose-200">
-            <AlertTriangle className="h-6 w-6 text-rose-400 shrink-0 mt-0.5" />
+          <div className="bg-rose-50 border border-rose-100 rounded-2xl p-5 flex gap-4 text-rose-900">
+            <AlertTriangle className="h-6 w-6 text-rose-500 shrink-0 mt-0.5" />
             <div className="flex-1">
-              <h4 className="font-bold text-rose-300">AI Service Reachability Error</h4>
-              <p className="text-sm text-zinc-400 mt-1 leading-relaxed">
-                Could not connect to the local Ollama API on <strong className="text-zinc-200">http://localhost:11434</strong>. 
+              <h4 className="font-bold text-rose-800">AI Service Reachability Error</h4>
+              <p className="text-sm text-neutral-600 mt-1 leading-relaxed">
+                Could not connect to the local Ollama API on <strong className="text-neutral-800">http://localhost:11434</strong>. 
                 Please start Ollama locally before running the simulation.
               </p>
               <button
                 onClick={checkSystemHealth}
                 disabled={checkingHealth}
-                className="mt-3 px-3 py-1.5 bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 hover:text-white text-xs font-semibold rounded-lg border border-rose-500/25 transition disabled:opacity-50"
+                className="mt-3 px-3 py-1.5 bg-rose-100 hover:bg-rose-200 text-rose-800 text-xs font-semibold rounded-lg border border-rose-200 transition disabled:opacity-50"
               >
                 {checkingHealth ? "Re-checking..." : "Re-check Connection"}
               </button>
@@ -454,18 +453,18 @@ export default function Dashboard() {
         )}
 
         {ollamaReachable === true && modelInstalled === false && (
-          <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-5 flex gap-4 text-amber-200">
-            <AlertTriangle className="h-6 w-6 text-amber-400 shrink-0 mt-0.5" />
+          <div className="bg-amber-50 border border-amber-100 rounded-2xl p-5 flex gap-4 text-amber-900">
+            <AlertTriangle className="h-6 w-6 text-amber-500 shrink-0 mt-0.5" />
             <div className="flex-1">
-              <h4 className="font-bold text-amber-300">AI Model Unavailable</h4>
-              <p className="text-sm text-zinc-400 mt-1 leading-relaxed">
-                Ollama is reachable, but the model <strong className="text-zinc-200">{targetModel}</strong> was not found. 
-                Please run <code className="font-mono text-zinc-300 bg-zinc-950 px-1 py-0.5 rounded border border-zinc-800">ollama pull {targetModel}</code> inside your command prompt to install it.
+              <h4 className="font-bold text-amber-800">AI Model Unavailable</h4>
+              <p className="text-sm text-neutral-600 mt-1 leading-relaxed">
+                Ollama is reachable, but the model <strong className="text-neutral-800">{targetModel}</strong> was not found. 
+                Please run <code className="font-mono text-neutral-800 bg-neutral-100 px-1 py-0.5 rounded border border-neutral-200">ollama pull {targetModel}</code> inside your command prompt to install it.
               </p>
               <button
                 onClick={checkSystemHealth}
                 disabled={checkingHealth}
-                className="mt-3 px-3 py-1.5 bg-amber-600/20 hover:bg-amber-600/30 text-amber-300 hover:text-white text-xs font-semibold rounded-lg border border-amber-500/25 transition disabled:opacity-50"
+                className="mt-3 px-3 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-800 text-xs font-semibold rounded-lg border border-amber-200 transition disabled:opacity-50"
               >
                 {checkingHealth ? "Re-checking..." : "Re-check Connection"}
               </button>
@@ -475,43 +474,43 @@ export default function Dashboard() {
 
         {/* Dynamic Fallback if checking failed during simulation execution */}
         {aiUnavailable && ollamaReachable !== false && modelInstalled !== false && (
-          <div className="bg-rose-500/10 border border-rose-500/20 rounded-2xl p-5 flex gap-4 text-rose-200">
-            <AlertTriangle className="h-6 w-6 text-rose-400 shrink-0 mt-0.5" />
+          <div className="bg-rose-50 border border-rose-100 rounded-2xl p-5 flex gap-4 text-rose-900">
+            <AlertTriangle className="h-6 w-6 text-rose-500 shrink-0 mt-0.5" />
             <div>
-              <h4 className="font-bold text-rose-300">AI Diagnosis Failed</h4>
-              <p className="text-sm text-zinc-400 mt-1 leading-relaxed">
+              <h4 className="font-bold text-rose-800">AI Diagnosis Failed</h4>
+              <p className="text-sm text-neutral-600 mt-1 leading-relaxed">
                 The local AI agent returned an error or timed out during the simulation run. 
                 Please verify that your Ollama server is running and responsive.
               </p>
             </div>
           </div>
         )}
- 
+
         {policyRejected && (
-          <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-5 flex gap-4 text-amber-200">
-            <AlertTriangle className="h-6 w-6 text-amber-400 shrink-0 mt-0.5" />
+          <div className="bg-amber-50 border border-amber-100 rounded-2xl p-5 flex gap-4 text-amber-900">
+            <AlertTriangle className="h-6 w-6 text-amber-500 shrink-0 mt-0.5" />
             <div>
-              <h4 className="font-bold text-amber-300">Recovery Not Approved</h4>
-              <p className="text-sm text-zinc-400 mt-1 leading-relaxed">
+              <h4 className="font-bold text-amber-800">Recovery Not Approved</h4>
+              <p className="text-sm text-neutral-600 mt-1 leading-relaxed">
                 The customer did not meet the recovery policy requirements (e.g., restricted country codes or inclusion bounds). 
                 No action was executed.
               </p>
             </div>
           </div>
         )}
- 
+
         {/* Live Demo wizard checklist */}
         {demoStep > 0 && (
-          <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6 shadow-2xl relative overflow-hidden">
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-emerald-500"></div>
-            <div className="flex justify-between items-center mb-5 border-b border-zinc-800/60 pb-3">
+          <div className="bg-white border border-neutral-200 rounded-2xl p-6 shadow-sm relative overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-neutral-900"></div>
+            <div className="flex justify-between items-center mb-5 border-b border-neutral-100 pb-3">
               <div className="flex items-center gap-2">
-                <span className="h-2.5 w-2.5 rounded-full bg-blue-500 animate-pulse"></span>
-                <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400">Live Demo Recovery Journey</h3>
+                <span className="h-2 w-2 rounded-full bg-neutral-900 animate-pulse"></span>
+                <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-500">Live Demo Recovery Journey</h3>
               </div>
               <button 
                 onClick={() => { setDemoStep(0); setSimulationLogs([]); }}
-                className="text-zinc-500 hover:text-zinc-300 transition text-xs"
+                className="text-neutral-400 hover:text-neutral-700 transition text-xs"
               >
                 Clear Demo Run
               </button>
@@ -522,78 +521,78 @@ export default function Dashboard() {
               <div className="lg:col-span-3 space-y-4">
                 <div className="flex items-center gap-3">
                   <div className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                    demoStep >= 1 ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30" : "bg-zinc-800 text-zinc-500"
+                    demoStep >= 1 ? "bg-emerald-50 text-emerald-600 border border-emerald-200" : "bg-neutral-100 text-neutral-400 border border-neutral-200"
                   }`}>
                     {demoStep >= 2 ? <Check className="h-3.5 w-3.5" /> : "1"}
                   </div>
-                  <span className={`text-sm ${demoStep >= 1 ? "text-zinc-200 font-medium" : "text-zinc-500"}`}>
+                  <span className={`text-sm ${demoStep >= 1 ? "text-neutral-800 font-medium" : "text-neutral-400"}`}>
                     Decline event normalized and logged
                   </span>
                 </div>
                 
                 <div className="flex items-center gap-3">
                   <div className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                    demoStep >= 2 ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30" : "bg-zinc-800 text-zinc-500"
+                    demoStep >= 2 ? "bg-emerald-50 text-emerald-600 border border-emerald-200" : "bg-neutral-100 text-neutral-400 border border-neutral-200"
                   }`}>
                     {demoStep >= 3 ? <Check className="h-3.5 w-3.5" /> : "2"}
                   </div>
-                  <span className={`text-sm ${demoStep >= 2 ? "text-zinc-200 font-medium" : "text-zinc-500"}`}>
-                    Risk score computed & registered (75/100 - Critical)
+                  <span className={`text-sm ${demoStep >= 2 ? "text-neutral-800 font-medium" : "text-neutral-400"}`}>
+                    Risk score computed & registered
                   </span>
                 </div>
  
                 <div className="flex items-center gap-3">
                   <div className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                    demoStep >= 3 ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30" : "bg-zinc-800 text-zinc-500"
+                    demoStep >= 3 ? "bg-emerald-50 text-emerald-600 border border-emerald-200" : "bg-neutral-100 text-neutral-400 border border-neutral-200"
                   }`}>
                     {demoStep >= 4 ? <Check className="h-3.5 w-3.5" /> : "3"}
                   </div>
-                  <span className={`text-sm ${demoStep >= 3 ? "text-zinc-200 font-medium" : "text-zinc-500"}`}>
+                  <span className={`text-sm ${demoStep >= 3 ? "text-neutral-800 font-medium" : "text-neutral-400"}`}>
                     Local Ollama AI Diagnosis complete
                   </span>
                 </div>
  
                 <div className="flex items-center gap-3">
                   <div className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                    demoStep >= 4 ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30" : "bg-zinc-800 text-zinc-500"
+                    demoStep >= 4 ? "bg-emerald-50 text-emerald-600 border border-emerald-200" : "bg-neutral-100 text-neutral-400 border border-neutral-200"
                   }`}>
                     {demoStep >= 5 ? <Check className="h-3.5 w-3.5" /> : "4"}
                   </div>
-                  <span className={`text-sm ${demoStep >= 4 ? "text-zinc-200 font-medium" : "text-zinc-500"}`}>
+                  <span className={`text-sm ${demoStep >= 4 ? "text-neutral-800 font-medium" : "text-neutral-400"}`}>
                     Safety recovery policy approved recommended action
                   </span>
                 </div>
  
                 <div className="flex items-center gap-3">
                   <div className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                    demoStep >= 5 ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30" : "bg-zinc-800 text-zinc-500"
+                    demoStep >= 5 ? "bg-emerald-50 text-emerald-600 border border-emerald-200" : "bg-neutral-100 text-neutral-400 border border-neutral-200"
                   }`}>
                     {demoStep >= 7 ? <Check className="h-3.5 w-3.5" /> : "5"}
                   </div>
-                  <span className={`text-sm ${demoStep >= 5 ? "text-zinc-200 font-medium" : "text-zinc-500"}`}>
+                  <span className={`text-sm ${demoStep >= 5 ? "text-neutral-800 font-medium" : "text-neutral-400"}`}>
                     Intervention triggered: Recovery email dispatched to client
                   </span>
                 </div>
  
                 <div className="flex items-center gap-3">
                   <div className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                    demoStep >= 7 ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30" : "bg-zinc-800 text-blue-400 border border-blue-500/30 animate-pulse"
+                    demoStep >= 7 ? "bg-emerald-50 text-emerald-600 border border-emerald-200" : "bg-neutral-100 text-neutral-500 border border-neutral-300 animate-pulse"
                   }`}>
                     {demoStep >= 7 ? <Check className="h-3.5 w-3.5" /> : "6"}
                   </div>
-                  <span className={`text-sm ${demoStep >= 5 ? "text-zinc-200 font-medium" : "text-zinc-500"}`}>
+                  <span className={`text-sm ${demoStep >= 5 ? "text-neutral-800 font-medium" : "text-neutral-400"}`}>
                     {demoStep === 7 ? "Outcome: Payment recovered successfully" : "Outcome: Waiting for customer card update..."}
                   </span>
                 </div>
               </div>
  
               {/* Interaction details */}
-              <div className="lg:col-span-2 bg-zinc-950/60 border border-zinc-800/80 rounded-xl p-5 flex flex-col items-center justify-center text-center">
+              <div className="lg:col-span-2 bg-neutral-50 border border-neutral-200 rounded-xl p-5 flex flex-col items-center justify-center text-center">
                 {demoStep < 7 ? (
                   <>
-                    <Mail className="h-10 w-10 text-blue-400 mb-3 animate-bounce" />
-                    <h4 className="font-semibold text-zinc-200 text-sm">Customer Action Required</h4>
-                    <p className="text-xs text-zinc-400 mt-2 max-w-sm leading-relaxed">
+                    <Mail className="h-10 w-10 text-neutral-700 mb-3 animate-bounce" />
+                    <h4 className="font-semibold text-neutral-800 text-sm">Customer Action Required</h4>
+                    <p className="text-xs text-neutral-500 mt-2 max-w-sm leading-relaxed">
                       We sent a dunning recovery email with a secure link to update payment details. 
                       Click below to open the portal and submit card details.
                     </p>
@@ -601,7 +600,7 @@ export default function Dashboard() {
                       href={`/update-payment?customer_id=${getCustomerIdByCase(selectedCase)}`}
                       target="_blank"
                       rel="noreferrer"
-                      className="mt-4 w-full py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-semibold transition inline-flex items-center justify-center gap-1.5 shadow-md shadow-blue-500/10"
+                      className="mt-4 w-full py-2 bg-neutral-900 hover:bg-neutral-800 text-white rounded-lg text-xs font-semibold transition inline-flex items-center justify-center gap-1.5 shadow-sm"
                     >
                       Open Checkout Portal
                       <ArrowUpRight className="h-3.5 w-3.5" />
@@ -609,18 +608,18 @@ export default function Dashboard() {
                   </>
                 ) : (
                   <>
-                    <CheckCircle className="h-12 w-12 text-emerald-400 mb-3" />
-                    <h4 className="font-bold text-emerald-400 text-sm uppercase tracking-wider">Recovery Succeeded!</h4>
-                    <strong className="text-white text-2xl mt-1.5 font-bold">
+                    <CheckCircle className="h-12 w-12 text-emerald-600 mb-3" />
+                    <h4 className="font-bold text-emerald-600 text-sm uppercase tracking-wider">Recovery Succeeded!</h4>
+                    <strong className="text-neutral-900 text-2xl mt-1.5 font-bold">
                       {formatINR(selectedCase === "sarah" ? 7999 : selectedCase === "john" ? 499 : selectedCase === "clara" ? 1499 : selectedCase === "james" ? 999 : 2499)} Recovered
                     </strong>
-                    <p className="text-xs text-zinc-400 mt-2 max-w-xs leading-relaxed">
+                    <p className="text-xs text-neutral-500 mt-2 max-w-xs leading-relaxed">
                       Customer updated their billing info successfully. 
                       The workflow has been set to <strong>Completed</strong> and subscription status is restored to <strong>Active</strong>.
                     </p>
                     <button 
                       onClick={() => { setDemoStep(0); setSimulationLogs([]); }}
-                      className="mt-4 px-4 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded text-xs transition"
+                      className="mt-4 px-4 py-1.5 bg-neutral-200 hover:bg-neutral-300 text-neutral-700 rounded text-xs transition"
                     >
                       Dismiss Demo Panel
                     </button>
@@ -630,13 +629,13 @@ export default function Dashboard() {
             </div>
             
             {/* Terminal log panel */}
-            <div className="mt-6 border-t border-zinc-800/80 pt-4 space-y-2">
-              <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Pipeline logs</span>
-              <div className="font-mono text-xs bg-zinc-950/80 rounded-lg p-3 max-h-36 overflow-y-auto space-y-1.5 border border-zinc-800/60 custom-scrollbar text-zinc-400">
+            <div className="mt-6 border-t border-neutral-100 pt-4 space-y-2">
+              <span className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Pipeline logs</span>
+              <div className="font-mono text-xs bg-neutral-50 rounded-lg p-3 max-h-36 overflow-y-auto space-y-1.5 border border-neutral-200 custom-scrollbar text-neutral-600">
                 {simulationLogs.map((log, index) => (
                   <div key={index} className="flex gap-2">
-                    <span className="text-zinc-700">[{index + 1}]</span>
-                    <span className={log.startsWith("✓") ? "text-emerald-400" : log.startsWith("❌") ? "text-rose-400" : ""}>
+                    <span className="text-neutral-400">[{index + 1}]</span>
+                    <span className={log.startsWith("✓") ? "text-emerald-600 font-medium" : log.startsWith("❌") ? "text-rose-600 font-medium" : ""}>
                       {log}
                     </span>
                   </div>
@@ -651,81 +650,81 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
           
           {/* Card 1: Revenue at Risk */}
-          <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-5 hover:border-zinc-700/80 transition relative overflow-hidden group shadow-lg">
-            <div className="absolute top-0 right-0 p-3 text-zinc-800 group-hover:text-zinc-700/80 transition">
+          <div className="bg-white border border-neutral-200 rounded-2xl p-5 transition relative overflow-hidden group shadow-sm">
+            <div className="absolute top-0 right-0 p-3 text-neutral-100 group-hover:text-neutral-200 transition">
               <AlertTriangle className="h-12 w-12" />
             </div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Revenue at Risk</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Revenue at Risk</p>
             {loading ? (
-              <div className="h-8 bg-zinc-800 animate-pulse rounded w-24 mt-2"></div>
+              <div className="h-8 bg-neutral-100 animate-pulse rounded w-24 mt-2"></div>
             ) : (
-              <h3 className="text-3xl font-bold mt-2 text-amber-500">{formatINR(data?.metrics.revenueAtRisk || 0)}</h3>
+              <h3 className="text-3xl font-bold mt-2 text-amber-600">{formatINR(data?.metrics.revenueAtRisk || 0)}</h3>
             )}
-            <p className="text-xs text-zinc-500 mt-1">Pending recovery interventions</p>
+            <p className="text-xs text-neutral-400 mt-1">Pending recovery interventions</p>
           </div>
  
           {/* Card 2: Recoverable */}
-          <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-5 hover:border-zinc-700/80 transition relative overflow-hidden group shadow-lg">
-            <div className="absolute top-0 right-0 p-3 text-zinc-800 group-hover:text-zinc-700/80 transition">
+          <div className="bg-white border border-neutral-200 rounded-2xl p-5 transition relative overflow-hidden group shadow-sm">
+            <div className="absolute top-0 right-0 p-3 text-neutral-100 group-hover:text-neutral-200 transition">
               <TrendingUp className="h-12 w-12" />
             </div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Recoverable Revenue</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Recoverable Revenue</p>
             {loading ? (
-              <div className="h-8 bg-zinc-800 animate-pulse rounded w-24 mt-2"></div>
+              <div className="h-8 bg-neutral-100 animate-pulse rounded w-24 mt-2"></div>
             ) : (
-              <h3 className="text-3xl font-bold mt-2 text-blue-500">{formatINR(data?.metrics.recoverableRevenue || 0)}</h3>
+              <h3 className="text-3xl font-bold mt-2 text-blue-600">{formatINR(data?.metrics.recoverableRevenue || 0)}</h3>
             )}
-            <p className="text-xs text-zinc-500 mt-1">Weighted by AI recoverability score</p>
+            <p className="text-xs text-neutral-400 mt-1">Weighted by AI recoverability score</p>
           </div>
  
           {/* Card 3: Recovered */}
-          <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-5 hover:border-zinc-700/80 transition relative overflow-hidden group shadow-lg">
-            <div className="absolute top-0 right-0 p-3 text-zinc-800 group-hover:text-zinc-700/80 transition">
+          <div className="bg-white border border-neutral-200 rounded-2xl p-5 transition relative overflow-hidden group shadow-sm">
+            <div className="absolute top-0 right-0 p-3 text-neutral-100 group-hover:text-neutral-200 transition">
               <CheckCircle className="h-12 w-12" />
             </div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Revenue Recovered</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Revenue Recovered</p>
             {loading ? (
-              <div className="h-8 bg-zinc-800 animate-pulse rounded w-24 mt-2"></div>
+              <div className="h-8 bg-neutral-100 animate-pulse rounded w-24 mt-2"></div>
             ) : (
-              <h3 className="text-3xl font-bold mt-2 text-emerald-500">{formatINR(data?.metrics.recoveredRevenue || 0)}</h3>
+              <h3 className="text-3xl font-bold mt-2 text-emerald-600">{formatINR(data?.metrics.recoveredRevenue || 0)}</h3>
             )}
-            <p className="text-xs text-zinc-500 mt-1">Saved from billing failures</p>
+            <p className="text-xs text-neutral-400 mt-1">Saved from billing failures</p>
           </div>
  
           {/* Card 4: Active Loops */}
-          <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-5 hover:border-zinc-700/80 transition relative overflow-hidden group shadow-lg">
-            <div className="absolute top-0 right-0 p-3 text-zinc-800 group-hover:text-zinc-700/80 transition">
+          <div className="bg-white border border-neutral-200 rounded-2xl p-5 transition relative overflow-hidden group shadow-sm">
+            <div className="absolute top-0 right-0 p-3 text-neutral-100 group-hover:text-neutral-200 transition">
               <Zap className="h-12 w-12" />
             </div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Active Workflows</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Active Workflows</p>
             {loading ? (
-              <div className="h-8 bg-zinc-800 animate-pulse rounded w-24 mt-2"></div>
+              <div className="h-8 bg-neutral-100 animate-pulse rounded w-24 mt-2"></div>
             ) : (
-              <h3 className="text-3xl font-bold mt-2 text-purple-400">{data?.metrics.activeWorkflows}</h3>
+              <h3 className="text-3xl font-bold mt-2 text-neutral-700">{data?.metrics.activeWorkflows}</h3>
             )}
-            <p className="text-xs text-zinc-500 mt-1">Currently in-flight loops</p>
+            <p className="text-xs text-neutral-400 mt-1">Currently in-flight loops</p>
           </div>
  
           {/* Card 5: Recovery rate */}
-          <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-5 hover:border-zinc-700/80 transition relative overflow-hidden group shadow-lg">
-            <div className="absolute top-0 right-0 p-3 text-zinc-800 group-hover:text-zinc-700/80 transition">
+          <div className="bg-white border border-neutral-200 rounded-2xl p-5 transition relative overflow-hidden group shadow-sm">
+            <div className="absolute top-0 right-0 p-3 text-neutral-100 group-hover:text-neutral-200 transition">
               <ArrowUpRight className="h-12 w-12" />
             </div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Recovery Rate</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Recovery Rate</p>
             {loading ? (
-              <div className="h-8 bg-zinc-800 animate-pulse rounded w-24 mt-2"></div>
+              <div className="h-8 bg-neutral-100 animate-pulse rounded w-24 mt-2"></div>
             ) : (
-              <h3 className="text-3xl font-bold mt-2 text-white">{data?.metrics.recoveryRate}%</h3>
+              <h3 className="text-3xl font-bold mt-2 text-neutral-900">{data?.metrics.recoveryRate}%</h3>
             )}
-            <p className="text-xs text-zinc-500 mt-1">Intervention efficiency score</p>
+            <p className="text-xs text-neutral-400 mt-1">Intervention efficiency score</p>
           </div>
         </div>
  
         {/* Time-Series Trend Chart (LineChart) */}
-        <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6 shadow-xl">
+        <div className="bg-white border border-neutral-200 rounded-2xl p-6 shadow-sm">
           <div className="mb-6">
-            <h3 className="font-semibold text-zinc-200 text-sm uppercase tracking-wider">Revenue Recovery Over Time</h3>
-            <p className="text-xs text-zinc-500 mt-0.5">Chronological trends of recovered revenue vs. unresolved revenue at risk</p>
+            <h3 className="font-semibold text-neutral-800 text-sm uppercase tracking-wider">Revenue Recovery Over Time</h3>
+            <p className="text-xs text-neutral-500 mt-0.5">Chronological trends of recovered revenue vs. unresolved revenue at risk</p>
           </div>
           
           <div className="h-64 relative" role="region" aria-label="Line chart showing Revenue Recovery trends over time">
@@ -835,30 +834,30 @@ export default function Dashboard() {
           <div className="col-span-1 lg:col-span-3 space-y-6">
             
             {/* Filter Toolbar */}
-            <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-4 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div className="bg-white border border-neutral-200 rounded-2xl p-4 flex flex-col md:flex-row justify-between items-center gap-4">
               <div className="relative w-full md:w-80">
-                <Search className="absolute left-3 top-2.5 h-4.5 w-4.5 text-zinc-500" />
+                <Search className="absolute left-3 top-2.5 h-4.5 w-4.5 text-neutral-400" />
                 <input
                   type="text"
                   placeholder="Search customer email or name..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl pl-10 pr-4 py-2 text-xs text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 transition"
+                  className="w-full bg-neutral-50 border border-neutral-200 rounded-xl pl-10 pr-4 py-2 text-xs text-neutral-800 placeholder-neutral-400 focus:outline-none focus:border-neutral-400 focus:ring-1 focus:ring-neutral-400 transition"
                 />
               </div>
  
               <div className="flex flex-wrap gap-2 w-full md:w-auto">
                 {/* Status selector */}
-                <div className="flex items-center gap-1 bg-zinc-950 border border-zinc-800 rounded-xl p-1">
-                  <Filter className="h-3 w-3 text-zinc-500 ml-2" />
+                <div className="flex items-center gap-1 bg-neutral-50 border border-neutral-200 rounded-xl p-1">
+                  <Filter className="h-3 w-3 text-neutral-400 ml-2" />
                   {["all", "open", "in_recovery", "recovered"].map((st) => (
                     <button
                       key={st}
                       onClick={() => setStatusFilter(st)}
                       className={`px-2 py-1 rounded-lg text-[10px] font-bold capitalize transition ${
                         statusFilter === st
-                          ? "bg-blue-600/10 text-blue-400 border border-blue-500/20"
-                          : "text-zinc-500 hover:text-zinc-300"
+                          ? "bg-white text-neutral-900 border border-neutral-200"
+                          : "text-neutral-500 hover:text-neutral-900"
                       }`}
                     >
                       {st.replace("_", " ")}
@@ -867,16 +866,16 @@ export default function Dashboard() {
                 </div>
  
                 {/* Risk Selector */}
-                <div className="flex items-center gap-1 bg-zinc-950 border border-zinc-800 rounded-xl p-1">
-                  <BarChart3 className="h-3 w-3 text-zinc-500 ml-2" />
+                <div className="flex items-center gap-1 bg-neutral-50 border border-neutral-200 rounded-xl p-1">
+                  <BarChart3 className="h-3 w-3 text-neutral-400 ml-2" />
                   {["all", "critical", "high", "medium", "low"].map((rk) => (
                     <button
                       key={rk}
                       onClick={() => setRiskFilter(rk)}
                       className={`px-2 py-1 rounded-lg text-[10px] font-bold capitalize transition ${
                         riskFilter === rk
-                          ? "bg-rose-500/10 text-rose-400 border border-rose-500/20"
-                          : "text-zinc-500 hover:text-zinc-300"
+                          ? "bg-white text-neutral-900 border border-neutral-200"
+                          : "text-neutral-500 hover:text-neutral-900"
                       }`}
                     >
                       {rk}
@@ -885,12 +884,12 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
- 
+            
             {/* Table Card */}
-            <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl overflow-hidden shadow-xl">
-              <div className="px-6 py-4 border-b border-zinc-800 flex justify-between items-center">
-                <h3 className="font-semibold text-zinc-200 text-xs uppercase tracking-wider">At-Risk Customers & Workflows</h3>
-                <button onClick={() => fetchData(false)} className="text-zinc-500 hover:text-white transition">
+            <div className="bg-white border border-neutral-200 rounded-2xl overflow-hidden shadow-sm">
+              <div className="px-6 py-4 border-b border-neutral-100 flex justify-between items-center">
+                <h3 className="font-semibold text-neutral-800 text-xs uppercase tracking-wider">At-Risk Customers & Workflows</h3>
+                <button onClick={() => fetchData(false)} className="text-neutral-400 hover:text-neutral-700 transition">
                   <RefreshCw className="h-4 w-4" />
                 </button>
               </div>
@@ -898,15 +897,15 @@ export default function Dashboard() {
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="border-b border-zinc-800 bg-zinc-950/40 text-xs font-semibold uppercase tracking-wider text-zinc-400">
-                      <th className="px-6 py-3 cursor-pointer select-none hover:text-white" onClick={() => handleSort("name")}>
+                    <tr className="border-b border-neutral-100 bg-neutral-50/50 text-xs font-semibold uppercase tracking-wider text-neutral-500">
+                      <th className="px-6 py-3 cursor-pointer select-none hover:text-neutral-900" onClick={() => handleSort("name")}>
                         Customer {sortBy === "name" && (sortOrder === "asc" ? "▲" : "▼")}
                       </th>
                       <th className="px-6 py-3">Subscription</th>
-                      <th className="px-6 py-3 text-right cursor-pointer select-none hover:text-white" onClick={() => handleSort("amount")}>
+                      <th className="px-6 py-3 text-right cursor-pointer select-none hover:text-neutral-900" onClick={() => handleSort("amount")}>
                         Amount at Risk {sortBy === "amount" && (sortOrder === "asc" ? "▲" : "▼")}
                       </th>
-                      <th className="px-6 py-3 text-center cursor-pointer select-none hover:text-white" onClick={() => handleSort("score")}>
+                      <th className="px-6 py-3 text-center cursor-pointer select-none hover:text-neutral-900" onClick={() => handleSort("score")}>
                         Risk {sortBy === "score" && (sortOrder === "asc" ? "▲" : "▼")}
                       </th>
                       <th className="px-6 py-3">AI Recommendation</th>
@@ -914,22 +913,22 @@ export default function Dashboard() {
                       <th className="px-6 py-3"></th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-zinc-800/40 text-xs">
+                  <tbody className="divide-y divide-neutral-100 text-xs">
                     {loading ? (
                       [1, 2, 3].map((i) => (
                         <tr key={i} className="animate-pulse">
-                          <td className="px-6 py-4"><div className="h-4 bg-zinc-800 rounded w-24"></div></td>
-                          <td className="px-6 py-4"><div className="h-4 bg-zinc-800 rounded w-16"></div></td>
-                          <td className="px-6 py-4 text-right"><div className="h-4 bg-zinc-800 rounded w-12 ml-auto"></div></td>
-                          <td className="px-6 py-4 text-center"><div className="h-4 bg-zinc-800 rounded w-10 mx-auto"></div></td>
-                          <td className="px-6 py-4"><div className="h-4 bg-zinc-800 rounded w-32"></div></td>
-                          <td className="px-6 py-4 text-center"><div className="h-4 bg-zinc-800 rounded w-14 mx-auto"></div></td>
+                          <td className="px-6 py-4"><div className="h-4 bg-neutral-100 rounded w-24"></div></td>
+                          <td className="px-6 py-4"><div className="h-4 bg-neutral-100 rounded w-16"></div></td>
+                          <td className="px-6 py-4 text-right"><div className="h-4 bg-neutral-100 rounded w-12 ml-auto"></div></td>
+                          <td className="px-6 py-4 text-center"><div className="h-4 bg-neutral-100 rounded w-10 mx-auto"></div></td>
+                          <td className="px-6 py-4"><div className="h-4 bg-neutral-100 rounded w-32"></div></td>
+                          <td className="px-6 py-4 text-center"><div className="h-4 bg-neutral-100 rounded w-14 mx-auto"></div></td>
                           <td className="px-6 py-4"></td>
                         </tr>
                       ))
                     ) : filteredRisks.length === 0 ? (
                       <tr>
-                        <td colSpan={7} className="px-6 py-12 text-center text-zinc-500 font-medium">
+                        <td colSpan={7} className="px-6 py-12 text-center text-neutral-400 font-medium">
                           No matching revenue risks found. Click "Run Recovery Demo" to trigger a simulation.
                         </td>
                       </tr>
@@ -938,77 +937,73 @@ export default function Dashboard() {
                         <tr
                           key={risk.id}
                           onClick={() => setSelectedRisk(risk)}
-                          className="hover:bg-zinc-800/30 cursor-pointer transition group"
+                          className="hover:bg-neutral-50/50 cursor-pointer transition group border-b border-neutral-100 last:border-b-0"
                         >
                           <td className="px-6 py-4">
                             <div className="flex items-center gap-3">
-                              <div className="bg-zinc-800 h-8 w-8 rounded-full flex items-center justify-center text-zinc-400 border border-zinc-700/50">
+                              <div className="bg-neutral-100 h-8 w-8 rounded-full flex items-center justify-center text-neutral-500 border border-neutral-200/50">
                                 <User className="h-4 w-4" />
                               </div>
                               <div>
-                                <h4 className="font-semibold text-zinc-100 group-hover:text-blue-400 transition">
+                                <h4 className="font-semibold text-neutral-800 group-hover:text-neutral-900 transition">
                                   {risk.customer?.name}
                                 </h4>
-                                <p className="text-[10px] text-zinc-500 mt-0.5">{risk.customer?.email}</p>
+                                <p className="text-[10px] text-neutral-500 mt-0.5">{risk.customer?.email}</p>
                               </div>
                             </div>
                           </td>
                           <td className="px-6 py-4">
-                            <div className="text-zinc-300 font-medium">{risk.subscription?.plan_name}</div>
-                            <div className="text-[10px] text-zinc-500 capitalize mt-0.5">{risk.payment_event?.failure_code?.replace(/_/g, " ")}</div>
+                            <div className="text-neutral-700 font-medium">{risk.subscription?.plan_name}</div>
+                            <div className="text-[10px] text-neutral-400 capitalize mt-0.5">{risk.payment_event?.failure_code?.replace(/_/g, " ")}</div>
                           </td>
-                          <td className="px-6 py-4 text-right font-mono font-semibold text-zinc-200">
+                          <td className="px-6 py-4 text-right font-mono font-semibold text-neutral-800">
                             {formatINR(risk.amount_at_risk)}
                           </td>
                           <td className="px-6 py-4 text-center">
                             <span
                               className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold whitespace-nowrap uppercase tracking-wider ${
                                 risk.risk_level === "critical"
-                                  ? "bg-rose-500/10 text-rose-400 border border-rose-500/20"
+                                  ? "bg-rose-50 text-rose-700 border border-rose-200"
                                   : risk.risk_level === "high"
-                                  ? "bg-amber-500/10 text-amber-400 border border-amber-500/20"
-                                  : risk.risk_level === "medium"
-                                  ? "bg-purple-500/10 text-purple-400 border border-purple-500/20"
-                                  : "bg-blue-500/10 text-blue-400 border border-blue-500/20"
+                                  ? "bg-amber-50 text-amber-700 border border-amber-200"
+                                  : "bg-neutral-50 text-neutral-700 border border-neutral-200"
                               }`}
                             >
                               <AlertTriangle className="h-3 w-3 shrink-0" />
                               {risk.risk_score} - {risk.risk_level}
                             </span>
                           </td>
-                          <td className="px-6 py-4 text-zinc-300">
+                          <td className="px-6 py-4 text-neutral-700">
                             {risk.workflows?.[0]?.recommended_action || "Pending AI recommendations..."}
                           </td>
                           <td className="px-6 py-4 text-center">
                             <span
                               className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border ${
                                 risk.status === "recovered"
-                                  ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                                  : risk.status === "in_recovery"
-                                  ? "bg-purple-500/10 text-purple-400 border-purple-500/20"
-                                  : "bg-zinc-500/10 text-zinc-400 border-zinc-700/20"
+                                  ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                                  : "bg-neutral-50 text-neutral-700 border border-neutral-200"
                               }`}
                             >
                               {risk.status === "recovered" ? (
                                 <>
-                                  <Check className="h-3 w-3 shrink-0 text-emerald-400" />
+                                  <Check className="h-3 w-3 shrink-0 text-emerald-600" />
                                   <span>Recovered</span>
                                 </>
                               ) : risk.status === "in_recovery" ? (
                                 <>
-                                  <Mail className="h-3 w-3 shrink-0 text-purple-400" />
+                                  <Mail className="h-3 w-3 shrink-0 text-neutral-600" />
                                   <span>Email Sent</span>
                                 </>
                               ) : (
                                 <>
-                                  <Info className="h-3 w-3 shrink-0 text-zinc-400" />
+                                  <Info className="h-3 w-3 shrink-0 text-neutral-500" />
                                   <span className="capitalize">{risk.status}</span>
                                 </>
                               )}
                             </span>
                           </td>
                           <td className="px-6 py-4 text-right">
-                            <ChevronRight className="h-4 w-4 text-zinc-600 group-hover:text-zinc-400 group-hover:translate-x-0.5 transition" />
+                            <ChevronRight className="h-4 w-4 text-neutral-400 group-hover:text-neutral-600 group-hover:translate-x-0.5 transition" />
                           </td>
                         </tr>
                       ))
@@ -1021,30 +1016,30 @@ export default function Dashboard() {
  
           {/* Live Activity Timeline */}
           <div className="col-span-1 space-y-6">
-            <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-5 shadow-xl">
-              <h3 className="font-semibold text-zinc-200 text-xs uppercase tracking-wider mb-4">Live System Logs</h3>
+            <div className="bg-white border border-neutral-200 rounded-2xl p-5 shadow-sm">
+              <h3 className="font-semibold text-neutral-800 text-xs uppercase tracking-wider mb-4">Live System Logs</h3>
               <div className="space-y-4 max-h-[420px] overflow-y-auto custom-scrollbar">
                 {loading ? (
                   [1, 2, 3].map((i) => (
-                    <div key={i} className="animate-pulse flex gap-3 pl-3 pb-3 border-l border-zinc-800">
-                      <div className="h-3 bg-zinc-800 rounded w-16"></div>
-                      <div className="h-3 bg-zinc-800 rounded w-24"></div>
+                    <div key={i} className="animate-pulse flex gap-3 pl-3 pb-3 border-l border-neutral-100">
+                      <div className="h-3 bg-neutral-100 rounded w-16"></div>
+                      <div className="h-3 bg-neutral-100 rounded w-24"></div>
                     </div>
                   ))
                 ) : data?.recentActivity.length === 0 ? (
-                  <p className="text-xs text-zinc-500 text-center py-4">No recent logs recorded.</p>
+                  <p className="text-xs text-neutral-400 text-center py-4">No recent logs recorded.</p>
                 ) : (
                   data?.recentActivity.map((log) => (
-                    <div key={log.id} className="flex gap-3 text-xs border-l border-zinc-800 pl-3 pb-3 relative">
-                      <div className="absolute -left-[5px] top-1.5 h-2.5 w-2.5 rounded-full bg-zinc-800 border border-zinc-700"></div>
+                    <div key={log.id} className="flex gap-3 text-xs border-l border-neutral-200 pl-3 pb-3 relative">
+                      <div className="absolute -left-[5px] top-1.5 h-2 w-2 rounded-full bg-neutral-200 border border-neutral-300"></div>
                       <div>
-                        <p className="text-zinc-400 leading-relaxed">
-                          <span className="font-semibold text-zinc-200">
+                        <p className="text-neutral-600 leading-relaxed">
+                          <span className="font-semibold text-neutral-800">
                             {log.workflow?.customer?.name || "System"}
                           </span>
-                          : <span className="capitalize text-zinc-300">{log.event_type.replace(/_/g, " ")}</span>
+                          : <span className="capitalize text-neutral-700">{log.event_type.replace(/_/g, " ")}</span>
                         </p>
-                        <p className="text-[10px] text-zinc-600 mt-1">
+                        <p className="text-[10px] text-neutral-400 mt-1">
                           {new Date(log.created_at).toLocaleTimeString()}
                         </p>
                       </div>
@@ -1059,64 +1054,64 @@ export default function Dashboard() {
  
       {/* Drawer: Detailed Workflow view */}
       {selectedRisk && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex justify-end transition-opacity">
-          <div className="w-full max-w-xl bg-zinc-900 border-l border-zinc-800 h-full overflow-y-auto flex flex-col relative shadow-2xl">
+        <div className="fixed inset-0 z-50 bg-black/30 backdrop-blur-sm flex justify-end transition-opacity">
+          <div className="w-full max-w-xl bg-white border-l border-neutral-200 h-full overflow-y-auto flex flex-col relative shadow-2xl">
             
             {/* Drawer Header */}
-            <div className="p-6 border-b border-zinc-800 flex justify-between items-center bg-zinc-950/20">
+            <div className="p-6 border-b border-neutral-200 flex justify-between items-center bg-neutral-50/50">
               <div>
-                <span className="text-xs font-semibold uppercase tracking-wider text-blue-500">Recovery Workflow details</span>
-                <h2 className="text-lg font-bold text-zinc-100 mt-1">{selectedRisk.customer?.name}</h2>
+                <span className="text-xs font-semibold uppercase tracking-wider text-neutral-500">Recovery Workflow details</span>
+                <h2 className="text-lg font-bold text-neutral-900 mt-1">{selectedRisk.customer?.name}</h2>
               </div>
               <button
                 onClick={() => setSelectedRisk(null)}
-                className="text-zinc-400 hover:text-white bg-zinc-800 hover:bg-zinc-700 p-1.5 rounded-lg transition"
+                className="text-neutral-500 hover:text-neutral-800 bg-neutral-100 hover:bg-neutral-200 p-1.5 rounded-lg transition"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
  
             {/* Drawer Body */}
-            <div className="p-6 space-y-6 flex-1 text-xs text-zinc-300">
+            <div className="p-6 space-y-6 flex-1 text-xs text-neutral-700">
               
               {/* Account summary cards */}
               <div className="grid grid-cols-2 gap-4">
-                <div className="bg-zinc-950/40 p-4 border border-zinc-800 rounded-xl">
-                  <span className="text-[10px] text-zinc-500 block uppercase font-bold tracking-wider">Subscription</span>
-                  <strong className="text-zinc-100 mt-1 block">{selectedRisk.subscription?.plan_name} Plan</strong>
-                  <span className="text-[10px] text-zinc-500 capitalize">{selectedRisk.subscription?.status} billing</span>
+                <div className="bg-neutral-50 p-4 border border-neutral-200 rounded-xl">
+                  <span className="text-[10px] text-neutral-500 block uppercase font-bold tracking-wider">Subscription</span>
+                  <strong className="text-neutral-900 mt-1 block">{selectedRisk.subscription?.plan_name} Plan</strong>
+                  <span className="text-[10px] text-neutral-500 capitalize">{selectedRisk.subscription?.status} billing</span>
                 </div>
-                <div className="bg-zinc-950/40 p-4 border border-zinc-800 rounded-xl">
-                  <span className="text-[10px] text-zinc-500 block uppercase font-bold tracking-wider">Amount At Risk</span>
-                  <strong className="text-zinc-100 mt-1 block text-lg font-mono">{formatINR(selectedRisk.amount_at_risk)}</strong>
-                  <span className="text-[10px] text-zinc-500">First attempt decline</span>
+                <div className="bg-neutral-50 p-4 border border-neutral-200 rounded-xl">
+                  <span className="text-[10px] text-neutral-500 block uppercase font-bold tracking-wider">Amount At Risk</span>
+                  <strong className="text-neutral-900 mt-1 block text-lg font-mono">{formatINR(selectedRisk.amount_at_risk)}</strong>
+                  <span className="text-[10px] text-neutral-500">First attempt decline</span>
                 </div>
               </div>
  
               {/* AI Diagnosis Insights */}
-              <div className="bg-gradient-to-tr from-zinc-900 to-zinc-950 border border-zinc-800 rounded-xl p-4 relative overflow-hidden">
-                <div className="absolute top-0 right-0 p-3 bg-blue-500/5 text-blue-400 rounded-bl-xl border-l border-b border-zinc-800">
+              <div className="bg-neutral-50 border border-neutral-200 rounded-xl p-4 relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-3 bg-neutral-100/50 text-neutral-700 rounded-bl-xl border-l border-b border-neutral-200">
                   <Zap className="h-5 w-5" />
                 </div>
-                <h4 className="font-semibold text-zinc-200 flex items-center gap-1.5 mb-2">
-                  <ShieldCheck className="h-4.5 w-4.5 text-blue-400" />
+                <h4 className="font-semibold text-neutral-800 flex items-center gap-1.5 mb-2">
+                  <ShieldCheck className="h-4.5 w-4.5 text-neutral-700" />
                   Local AI Agent Diagnosis
                 </h4>
                 
-                <div className="space-y-3 mt-4 text-xs text-zinc-400">
+                <div className="space-y-3 mt-4 text-xs text-neutral-600">
                   <div>
-                    <span className="text-zinc-500 font-medium">Auto-Calculated Reason:</span>
-                    <p className="mt-0.5 text-zinc-300 font-medium leading-relaxed">{selectedRisk.reason}</p>
+                    <span className="text-neutral-500 font-medium">Auto-Calculated Reason:</span>
+                    <p className="mt-0.5 text-neutral-700 font-medium leading-relaxed">{selectedRisk.reason}</p>
                   </div>
                   
                   <div className="grid grid-cols-2 gap-3 pt-2">
                     <div>
-                      <span className="text-zinc-500 block">Recoverability Index:</span>
-                      <strong className="text-emerald-400 text-sm">{selectedRisk.recoverability_score}/100</strong>
+                      <span className="text-neutral-500 block">Recoverability Index:</span>
+                      <strong className="text-emerald-600 text-sm">{selectedRisk.recoverability_score}/100</strong>
                     </div>
                     <div>
-                      <span className="text-zinc-500 block">Risk Category:</span>
-                      <strong className="text-rose-400 uppercase text-xs tracking-wider">{selectedRisk.risk_level}</strong>
+                      <span className="text-neutral-500 block">Risk Category:</span>
+                      <strong className="text-rose-600 uppercase text-xs tracking-wider">{selectedRisk.risk_level}</strong>
                     </div>
                   </div>
                 </div>
@@ -1124,40 +1119,43 @@ export default function Dashboard() {
  
               {/* Customer Payment History */}
               <div className="space-y-3">
-                <h4 className="font-semibold text-zinc-200">Customer Payment History</h4>
-                <div className="bg-zinc-950/50 rounded-xl border border-zinc-800 p-4 space-y-3">
+                <h4 className="font-semibold text-neutral-850">Customer Payment History</h4>
+                <div className="bg-neutral-50 border border-neutral-200 rounded-xl p-4 space-y-3">
                   {!selectedRisk.customer?.payment_events || selectedRisk.customer.payment_events.length === 0 ? (
-                    <p className="text-zinc-500 text-center py-2">No historical payments recorded.</p>
+                    <p className="text-neutral-400 text-center py-2">No historical payments recorded.</p>
                   ) : (
                     <div className="space-y-3 max-h-[160px] overflow-y-auto custom-scrollbar pr-1">
                       {selectedRisk.customer.payment_events
                         .sort((a: any, b: any) => new Date(b.occurred_at).getTime() - new Date(a.occurred_at).getTime())
                         .map((event: any) => (
-                          <div key={event.id} className="flex justify-between items-center text-xs pb-2 border-b border-zinc-800/40 last:border-b-0 last:pb-0">
+                          <div key={event.id} className="flex justify-between items-center text-xs pb-2 border-b border-neutral-200/50 last:border-b-0 last:pb-0">
                             <div>
-                              <div className="flex items-center gap-1.5 font-medium text-zinc-300">
-                                <span className={event.status === "succeeded" ? "text-emerald-400 font-semibold" : "text-rose-400 font-semibold"}>
+                              <div className="flex items-center gap-1.5 font-medium text-neutral-700">
+                                <span className={event.status === "succeeded" ? "text-emerald-600 font-semibold" : "text-rose-600 font-semibold"}>
                                   {event.status === "succeeded" ? "Success" : "Failed"}
                                 </span>
-                                <span className="text-zinc-500">•</span>
+                                <span className="text-neutral-400">•</span>
                                 <span className="font-mono">{formatINR(event.amount)}</span>
                               </div>
-                              <div className="text-[10px] text-zinc-500 mt-0.5">
+                              <div className="text-[10px] text-neutral-400 mt-0.5">
                                 {event.failure_code ? `Error: ${event.failure_code.replace(/_/g, " ")}` : "Processed successfully"}
                               </div>
-                            </div>
-                            <div className="text-right">
-                              <span className="text-[10px] text-zinc-500">
-                                {new Date(event.occurred_at).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
-                              </span>
-                              {event.attempt_number > 1 && (
-                                <div className="text-[9px] text-zinc-600 font-bold uppercase mt-0.5">
-                                  Attempt #{event.attempt_number}
+                                <div className="text-[10px] text-neutral-400 mt-0.5">
+                                  {event.failure_code ? `Error: ${event.failure_code.replace(/_/g, " ")}` : "Processed successfully"}
                                 </div>
-                              )}
+                              </div>
+                              <div className="text-right">
+                                <span className="text-[10px] text-neutral-400">
+                                  {new Date(event.occurred_at).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
+                                </span>
+                                {event.attempt_number > 1 && (
+                                  <div className="text-[9px] text-neutral-500 font-bold uppercase mt-0.5">
+                                    Attempt #{event.attempt_number}
+                                  </div>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        ))}
+                          ))}
                     </div>
                   )}
                 </div>
@@ -1165,30 +1163,30 @@ export default function Dashboard() {
 
               {/* Intervention Status Info */}
               <div className="space-y-3">
-                <h4 className="font-semibold text-zinc-200">Intervention Log</h4>
-                <div className="bg-zinc-950/50 rounded-xl border border-zinc-800 p-4 space-y-4">
+                <h4 className="font-semibold text-neutral-800">Intervention Log</h4>
+                <div className="bg-neutral-50 border border-neutral-200 rounded-xl p-4 space-y-4">
                   <div className="flex justify-between items-center">
-                    <span className="text-zinc-500">Status:</span>
+                    <span className="text-neutral-500">Status:</span>
                     <span className={`px-2 py-0.5 rounded text-[10px] font-bold border uppercase tracking-wider ${
                       selectedRisk.status === "recovered"
-                        ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                        : "bg-purple-500/10 text-purple-400 border-purple-500/20"
+                        ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                        : "bg-neutral-50 text-neutral-700 border border-neutral-200"
                     }`}>
                       {selectedRisk.status === "recovered" ? "Payment Recovered" : "Automated Recovery Mail Sent"}
                     </span>
                   </div>
  
-                  <div className="border-t border-zinc-800/60 pt-3">
-                    <span className="text-zinc-500">Intervention Trigger Type:</span>
-                    <span className="text-zinc-300 block font-semibold mt-0.5">Automated Dunning Email Intervention (Simulated)</span>
+                  <div className="border-t border-neutral-200 pt-3">
+                    <span className="text-neutral-500">Intervention Trigger Type:</span>
+                    <span className="text-neutral-700 block font-semibold mt-0.5">Automated Dunning Email Intervention (Simulated)</span>
                   </div>
  
-                  <div className="border-t border-zinc-800/60 pt-3 flex gap-3 text-zinc-400">
-                    <Mail className="h-5 w-5 text-zinc-500 shrink-0" />
+                  <div className="border-t border-neutral-200 pt-3 flex gap-3 text-neutral-600">
+                    <Mail className="h-5 w-5 text-neutral-400 shrink-0" />
                     <div>
-                      <span className="font-semibold text-zinc-300 block">Dunning Email Details</span>
+                      <span className="font-semibold text-neutral-855 block">Dunning Email Details</span>
                       <p className="mt-1 leading-relaxed">
-                        A personalized billing recovery message was sent to <strong className="text-zinc-200">{selectedRisk.customer?.email}</strong> prompting card update with a secure, server-side CTA payment link.
+                        A personalized billing recovery message was sent to <strong className="text-neutral-800">{selectedRisk.customer?.email}</strong> prompting card update with a secure, server-side CTA payment link.
                       </p>
                     </div>
                   </div>
@@ -1197,10 +1195,10 @@ export default function Dashboard() {
  
               {/* Simulation resolution panel */}
               {selectedRisk.status !== "recovered" && (
-                <div className="bg-zinc-950/30 p-4 border border-dashed border-zinc-800 rounded-xl flex flex-col gap-3">
+                <div className="bg-neutral-50/50 border border-dashed border-neutral-200 rounded-xl p-4 flex flex-col gap-3">
                   <div className="flex gap-2">
-                    <Info className="h-4.5 w-4.5 text-zinc-400 shrink-0 mt-0.5" />
-                    <p className="text-zinc-500 leading-relaxed">
+                    <Info className="h-4.5 w-4.5 text-neutral-400 shrink-0 mt-0.5" />
+                    <p className="text-neutral-500 leading-relaxed">
                       Simulate a customer clicking the update-payment link inside their email, changing card details, and resolving the billing failure.
                     </p>
                   </div>
@@ -1208,7 +1206,7 @@ export default function Dashboard() {
                   <button
                     onClick={() => handleSimulateRecovery(selectedRisk.workflows?.[0]?.id)}
                     disabled={recoveringId !== null}
-                    className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-semibold transition disabled:opacity-50"
+                    className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-neutral-900 hover:bg-neutral-800 text-white rounded-lg font-semibold transition disabled:opacity-50"
                   >
                     <Check className="h-4.5 w-4.5" />
                     {recoveringId ? "Saving..." : "Simulate Customer Payment Success"}
