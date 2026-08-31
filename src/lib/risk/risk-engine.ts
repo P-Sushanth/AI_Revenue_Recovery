@@ -74,7 +74,7 @@ export function calculateRiskScore(
   // 4. Customer successful historical payments
   const hasSuccessfulHistory = historicalPayments.some((p) => p.status === "succeeded");
   if (hasSuccessfulHistory) {
-    score += RISK_WEIGHTS.SUCCESSFUL_HISTORY_BONUS;
+    score -= RISK_WEIGHTS.SUCCESSFUL_HISTORY_BONUS;
     reasons.push("Customer has a history of successful payments.");
   }
 
