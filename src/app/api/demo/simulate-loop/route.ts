@@ -54,6 +54,20 @@ export async function POST(request: Request) {
       failureCode = "expired_card";
       failureMessage = "Subscription already cancelled";
       attemptNumber = 1;
+    } else if (selectedCase === "clara") {
+      customerExternalId = "cus_clara_303";
+      subscriptionExternalId = "sub_clara_666";
+      amount = 1499.00;
+      failureCode = "processing_error";
+      failureMessage = "Gateway processing timeout error";
+      attemptNumber = 1;
+    } else if (selectedCase === "james") {
+      customerExternalId = "cus_james_404";
+      subscriptionExternalId = "sub_james_777";
+      amount = 999.00;
+      failureCode = "card_declined";
+      failureMessage = "Card was declined by issuing bank";
+      attemptNumber = 1;
     }
 
     // 1. Ensure we have seeded data

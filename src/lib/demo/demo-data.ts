@@ -60,12 +60,16 @@ export async function seedDemoData(triggerActiveFailures = false) {
   const johnId = "33333333-3333-3333-3333-333333333333";
   const mayaId = "44444444-4444-4444-4444-444444444444";
   const danielId = "55555555-5555-5555-5555-555555555555";
+  const claraId = "66666666-6666-6666-6666-666666666666";
+  const jamesId = "77777777-7777-7777-7777-777777777777";
 
   const alexSubId = "11111111-1111-1111-1111-222222222222";
   const sarahSubId = "22222222-2222-2222-2222-333333333333";
   const johnSubId = "33333333-3333-3333-3333-444444444444";
   const mayaSubId = "44444444-4444-4444-4444-555555555555";
   const danielSubId = "55555555-5555-5555-5555-666666666666";
+  const claraSubId = "66666666-6666-6666-6666-777777777777";
+  const jamesSubId = "77777777-7777-7777-7777-888888888888";
 
   const customers: CustomerSeed[] = [
     { id: alexId, external_id: "cus_alex_123", name: "Alex", email: "alex@example.com", currency: "INR", country: "IN" },
@@ -73,6 +77,8 @@ export async function seedDemoData(triggerActiveFailures = false) {
     { id: johnId, external_id: "cus_john_789", name: "John", email: "john@example.com", currency: "INR", country: "IN" },
     { id: mayaId, external_id: "cus_maya_101", name: "Maya", email: "maya@example.com", currency: "INR", country: "IN" },
     { id: danielId, external_id: "cus_daniel_202", name: "Daniel", email: "daniel@example.com", currency: "INR", country: "IN" },
+    { id: claraId, external_id: "cus_clara_303", name: "Clara", email: "clara@example.com", currency: "INR", country: "IN" },
+    { id: jamesId, external_id: "cus_james_404", name: "James", email: "james@example.com", currency: "INR", country: "IN" },
   ];
 
   const now = new Date();
@@ -129,6 +135,28 @@ export async function seedDemoData(triggerActiveFailures = false) {
       external_id: "sub_daniel_555",
       plan_name: "Pro",
       amount: 2499.00,
+      currency: "INR",
+      status: "cancelled",
+      billing_interval: "month",
+      next_billing_date: now,
+    },
+    {
+      id: claraSubId,
+      customer_id: claraId,
+      external_id: "sub_clara_666",
+      plan_name: "Pro",
+      amount: 1499.00,
+      currency: "INR",
+      status: "paused",
+      billing_interval: "month",
+      next_billing_date: nextMonth,
+    },
+    {
+      id: jamesSubId,
+      customer_id: jamesId,
+      external_id: "sub_james_777",
+      plan_name: "Starter",
+      amount: 999.00,
       currency: "INR",
       status: "cancelled",
       billing_interval: "month",
@@ -200,7 +228,13 @@ export async function seedDemoData(triggerActiveFailures = false) {
   }
 
   // 5. Daniel: No successful payments, just cancelled subscription
-  // We will seed the historical payments
+
+  // 6. Clara: 5 successful payments
+  addHistoricalPayments(claraId, claraSubId, 1499.00, 5);
+
+  // 7. James: 3 successful payments
+  addHistoricalPayments(jamesId, jamesSubId, 999.00, 3);
+
   console.log("Seeding payment events...");
   if (paymentEvents.length > 0) {
     await db.from("payment_events").insert(paymentEvents);
@@ -288,11 +322,43 @@ export async function seedDemoData(triggerActiveFailures = false) {
       occurred_at: new Date().toISOString(),
       raw_payload: { seed: true }
     });
+
+    // 6. Clara - Paused Subscription + Processing Error
+    await processPaymentEvent({
+      provider: "razorpay",
+      external_event_id: `evt_seed_fail_clara_${Date.now()}`,
+      customer_external_id: "cus_clara_303",
+      subscription_external_id: "sub_clara_666",
+      amount: 1499.00,
+      currency: "INR",
+      status: "failed",
+      failure_code: "processing_error",
+      failure_message: "Gateway processing timeout error",
+      attempt_number: 1,
+      occurred_at: new Date().toISOString(),
+      raw_payload: { seed: true }
+    });
+
+    // 7. James - Cancelled Subscription + Card Declined
+    await processPaymentEvent({
+      provider: "razorpay",
+      external_event_id: `evt_seed_fail_james_${Date.now()}`,
+      customer_external_id: "cus_james_404",
+      subscription_external_id: "sub_james_777",
+      amount: 999.00,
+      currency: "INR",
+      status: "failed",
+      failure_code: "card_declined",
+      failure_message: "Card was declined by issuing bank",
+      attempt_number: 1,
+      occurred_at: new Date().toISOString(),
+      raw_payload: { seed: true }
+    });
   }
 
   console.log("Seeding finished successfully!");
   return {
-    customers: { alexId, sarahId, johnId, mayaId, danielId },
-    subscriptions: { alexSubId, sarahSubId, johnSubId, mayaSubId, danielSubId },
+    customers: { alexId, sarahId, johnId, mayaId, danielId, claraId, jamesId },
+    subscriptions: { alexSubId, sarahSubId, johnSubId, mayaSubId, danielSubId, claraSubId, jamesSubId },
   };
 }

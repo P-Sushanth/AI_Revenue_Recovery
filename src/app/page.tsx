@@ -57,6 +57,8 @@ const getCustomerIdByCase = (c: string) => {
     case "john": return "33333333-3333-3333-3333-333333333333";
     case "maya": return "44444444-4444-4444-4444-444444444444";
     case "daniel": return "55555555-5555-5555-5555-555555555555";
+    case "clara": return "66666666-6666-6666-6666-666666666666";
+    case "james": return "77777777-7777-7777-7777-777777777777";
     default: return "11111111-1111-1111-1111-111111111111";
   }
 };
@@ -210,6 +212,8 @@ export default function Dashboard() {
       case "john": return "John (Starter Plan ₹499, Insufficient Funds)";
       case "maya": return "Maya (Pro Plan ₹2499, 4th Consecutive Failure)";
       case "daniel": return "Daniel (Pro Plan ₹2499, Cancelled Status)";
+      case "clara": return "Clara (Pro Plan ₹1499, Paused - Processing Error)";
+      case "james": return "James (Starter Plan ₹999, Cancelled - Card Declined)";
       default: return "Alex";
     }
   };
@@ -226,14 +230,14 @@ export default function Dashboard() {
       // Step 1: Normalization
       await new Promise((resolve) => setTimeout(resolve, 800));
       setDemoStep(2);
-      const code = selectedCase === "sarah" ? "authentication_required" : selectedCase === "john" ? "insufficient_funds" : selectedCase === "maya" ? "card_declined" : "expired_card";
+      const code = selectedCase === "sarah" ? "authentication_required" : selectedCase === "john" ? "insufficient_funds" : selectedCase === "clara" ? "processing_error" : selectedCase === "maya" ? "card_declined" : "expired_card";
       setSimulationLogs(prev => [...prev, `✓ Normalized Razorpay decline payload (${code})`, "Inserting risk analysis into database..."]);
  
       // Step 2: Risk Scoring
       await new Promise((resolve) => setTimeout(resolve, 800));
       setDemoStep(3);
-      const score = selectedCase === "john" ? "15/100 (LOW)" : selectedCase === "maya" ? "90/100 (CRITICAL)" : "75/100 (CRITICAL)";
-      const index = selectedCase === "john" ? "10/100 (LOW)" : "85/100 (HIGH)";
+      const score = selectedCase === "clara" ? "40/100 (MEDIUM)" : selectedCase === "james" ? "30/100 (MEDIUM)" : selectedCase === "john" ? "60/100 (HIGH)" : selectedCase === "maya" ? "90/100 (CRITICAL)" : "55/100 (HIGH)";
+      const index = selectedCase === "john" ? "50/100 (MEDIUM)" : selectedCase === "james" ? "40/100 (MEDIUM)" : "85/100 (HIGH)";
       setSimulationLogs(prev => [...prev, `✓ Risk score calculated: ${score}`, `✓ Recoverability index: ${index}`, "Workflow registered: STATUS PENDING"]);
  
       // Step 3: LLM Analysis (Calls /api/demo/simulate-loop)
@@ -408,6 +412,8 @@ export default function Dashboard() {
                 <option value="john" className="bg-zinc-950 text-zinc-300">John (Low Risk - Policy Blocked)</option>
                 <option value="maya" className="bg-zinc-950 text-zinc-300">Maya (Multiple Declines - Success)</option>
                 <option value="daniel" className="bg-zinc-950 text-zinc-300">Daniel (Cancelled Sub - Policy Blocked)</option>
+                <option value="clara" className="bg-zinc-950 text-zinc-300">Clara (Paused - Medium Risk)</option>
+                <option value="james" className="bg-zinc-950 text-zinc-300">James (Cancelled - Low/Medium Risk)</option>
               </select>
               <button
                 onClick={handleRunSimulation}
@@ -606,7 +612,7 @@ export default function Dashboard() {
                     <CheckCircle className="h-12 w-12 text-emerald-400 mb-3" />
                     <h4 className="font-bold text-emerald-400 text-sm uppercase tracking-wider">Recovery Succeeded!</h4>
                     <strong className="text-white text-2xl mt-1.5 font-bold">
-                      {formatINR(selectedCase === "sarah" ? 7999 : selectedCase === "john" ? 499 : 2499)} Recovered
+                      {formatINR(selectedCase === "sarah" ? 7999 : selectedCase === "john" ? 499 : selectedCase === "clara" ? 1499 : selectedCase === "james" ? 999 : 2499)} Recovered
                     </strong>
                     <p className="text-xs text-zinc-400 mt-2 max-w-xs leading-relaxed">
                       Customer updated their billing info successfully. 
