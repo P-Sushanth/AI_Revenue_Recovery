@@ -15,7 +15,7 @@ describe("Action Executor Integration Tests", () => {
 
     // 2. Trigger failed payment to get a workflow
     const triggerResult = await processPaymentEvent({
-      provider: "stripe",
+      provider: "razorpay",
       external_event_id: `evt_test_executor_${Date.now()}`,
       customer_external_id: "cus_alex_123",
       subscription_external_id: "sub_alex_111",

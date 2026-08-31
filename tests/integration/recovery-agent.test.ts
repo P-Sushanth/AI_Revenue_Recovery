@@ -13,7 +13,7 @@ describe("AI Recovery Agent Integration Tests", () => {
     await seedDemoData();
 
     const triggerResult = await processPaymentEvent({
-      provider: "stripe",
+      provider: "razorpay",
       external_event_id: `evt_test_ai_agent_${Date.now()}`,
       customer_external_id: "cus_alex_123",
       subscription_external_id: "sub_alex_111",

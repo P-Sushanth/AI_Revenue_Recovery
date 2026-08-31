@@ -13,7 +13,7 @@ describe("Workflow Engine Integration Tests", () => {
 
   it("should process a failed payment event, creating risk and workflow records", async () => {
     const rawPayload = {
-      provider: "stripe",
+      provider: "razorpay",
       external_event_id: `evt_test_failure_${Date.now()}`,
       customer_external_id: "cus_alex_123",
       subscription_external_id: "sub_alex_111",
@@ -69,7 +69,7 @@ describe("Workflow Engine Integration Tests", () => {
   it("should enforce event idempotency and return existing event without duplicate workflows", async () => {
     const externalEventId = `evt_test_idempotency_${Date.now()}`;
     const rawPayload = {
-      provider: "stripe",
+      provider: "razorpay",
       external_event_id: externalEventId,
       customer_external_id: "cus_alex_123",
       subscription_external_id: "sub_alex_111",
@@ -100,7 +100,7 @@ describe("Workflow Engine Integration Tests", () => {
 
     // 1. Trigger payment failure
     const failResult = await processPaymentEvent({
-      provider: "stripe",
+      provider: "razorpay",
       external_event_id: failureEventId,
       customer_external_id: "cus_sarah_456",
       subscription_external_id: "sub_sarah_222",
@@ -116,7 +116,7 @@ describe("Workflow Engine Integration Tests", () => {
 
     // 2. Trigger subsequent successful payment
     const successResult = await processPaymentEvent({
-      provider: "stripe",
+      provider: "razorpay",
       external_event_id: successEventId,
       customer_external_id: "cus_sarah_456",
       subscription_external_id: "sub_sarah_222",
