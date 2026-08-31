@@ -956,16 +956,18 @@ export default function Dashboard() {
                           </td>
                           <td className="px-6 py-4 text-center">
                             <span
-                              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold whitespace-nowrap uppercase tracking-wider ${
                                 risk.risk_level === "critical"
                                   ? "bg-rose-500/10 text-rose-400 border border-rose-500/20"
                                   : risk.risk_level === "high"
                                   ? "bg-amber-500/10 text-amber-400 border border-amber-500/20"
+                                  : risk.risk_level === "medium"
+                                  ? "bg-purple-500/10 text-purple-400 border border-purple-500/20"
                                   : "bg-blue-500/10 text-blue-400 border border-blue-500/20"
                               }`}
                             >
                               <AlertTriangle className="h-3 w-3 shrink-0" />
-                              {risk.risk_score} — {risk.risk_level}
+                              {risk.risk_score} - {risk.risk_level}
                             </span>
                           </td>
                           <td className="px-6 py-4 text-zinc-300">
