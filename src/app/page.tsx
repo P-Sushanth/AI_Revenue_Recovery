@@ -1116,6 +1116,47 @@ export default function Dashboard() {
                 </div>
               </div>
  
+              {/* Customer Payment History */}
+              <div className="space-y-3">
+                <h4 className="font-semibold text-zinc-200">Customer Payment History</h4>
+                <div className="bg-zinc-950/50 rounded-xl border border-zinc-800 p-4 space-y-3">
+                  {!selectedRisk.customer?.payment_events || selectedRisk.customer.payment_events.length === 0 ? (
+                    <p className="text-zinc-500 text-center py-2">No historical payments recorded.</p>
+                  ) : (
+                    <div className="space-y-3 max-h-[160px] overflow-y-auto custom-scrollbar pr-1">
+                      {selectedRisk.customer.payment_events
+                        .sort((a: any, b: any) => new Date(b.occurred_at).getTime() - new Date(a.occurred_at).getTime())
+                        .map((event: any) => (
+                          <div key={event.id} className="flex justify-between items-center text-xs pb-2 border-b border-zinc-800/40 last:border-b-0 last:pb-0">
+                            <div>
+                              <div className="flex items-center gap-1.5 font-medium text-zinc-300">
+                                <span className={event.status === "succeeded" ? "text-emerald-400 font-semibold" : "text-rose-400 font-semibold"}>
+                                  {event.status === "succeeded" ? "Success" : "Failed"}
+                                </span>
+                                <span className="text-zinc-500">•</span>
+                                <span className="font-mono">{formatINR(event.amount)}</span>
+                              </div>
+                              <div className="text-[10px] text-zinc-500 mt-0.5">
+                                {event.failure_code ? `Error: ${event.failure_code.replace(/_/g, " ")}` : "Processed successfully"}
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <span className="text-[10px] text-zinc-500">
+                                {new Date(event.occurred_at).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
+                              </span>
+                              {event.attempt_number > 1 && (
+                                <div className="text-[9px] text-zinc-600 font-bold uppercase mt-0.5">
+                                  Attempt #{event.attempt_number}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
               {/* Intervention Status Info */}
               <div className="space-y-3">
                 <h4 className="font-semibold text-zinc-200">Intervention Log</h4>

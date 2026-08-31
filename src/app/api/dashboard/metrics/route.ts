@@ -11,7 +11,12 @@ export async function GET() {
       .from("revenue_risks")
       .select(`
         *,
-        customer:customers(name, email, country),
+        customer:customers(
+          name, 
+          email, 
+          country,
+          payment_events(id, amount, status, failure_code, attempt_number, occurred_at)
+        ),
         subscription:subscriptions(plan_name, amount, status),
         payment_event:payment_events(provider, failure_code, failure_message, attempt_number),
         workflows:recovery_workflows(id, status, recommended_action, approved_action, action_status)
