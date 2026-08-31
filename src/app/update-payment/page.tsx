@@ -73,7 +73,7 @@ export default async function UpdatePaymentPage({ searchParams }: PageProps) {
       )
     `)
     .eq("customer_id", customer.id)
-    .in("status", ["pending", "analyzing", "awaiting_approval", "executing", "failed"])
+    .in("status", ["pending", "analyzing", "awaiting_approval", "executing", "failed", "completed"])
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();

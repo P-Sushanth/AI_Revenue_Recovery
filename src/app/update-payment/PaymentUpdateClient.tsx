@@ -125,7 +125,7 @@ export default function PaymentUpdateClient({
     }
   };
 
-  const hasActiveWorkflow = workflow && ["pending", "analyzing", "awaiting_approval", "executing", "failed"].includes(workflow.status);
+  const hasActiveWorkflow = workflow && ["pending", "analyzing", "awaiting_approval", "executing", "failed", "completed"].includes(workflow.status);
 
   // If no subscription is configured or subscription is already cancelled
   if (!subscription) {
