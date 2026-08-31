@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { analyzeRawBankLog } from "@/lib/ai/recovery-agent";
 
+export const maxDuration = 120;
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();

@@ -69,7 +69,7 @@ async function callLLM(messages: LLMMessage[]): Promise<string> {
   }
 
   const controller = new AbortController();
-  const timeoutLimit = Number(process.env.LOCAL_LLM_TIMEOUT) || 45000;
+  const timeoutLimit = Number(process.env.LOCAL_LLM_TIMEOUT) || 120000;
   const timeoutId = setTimeout(() => controller.abort(), timeoutLimit);
 
   try {
@@ -97,6 +97,11 @@ async function callLLM(messages: LLMMessage[]): Promise<string> {
     }
 
     return content;
+  } catch (err: any) {
+    if (err.name === "AbortError" || err.message?.includes("aborted") || err.message?.includes("abort")) {
+      throw new Error("Ollama timed out while loading the qwen3.5:9b model into memory. Please retry now that Ollama has loaded the model.");
+    }
+    throw err;
   } finally {
     clearTimeout(timeoutId);
   }
