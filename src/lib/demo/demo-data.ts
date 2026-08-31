@@ -243,8 +243,18 @@ export async function seedDemoData(triggerActiveFailures = false) {
   if (triggerActiveFailures) {
     console.log("Triggering active payment failures to populate risks...");
 
+    // Helper to update recommendation for seeded workflows
+    const applySeededRecommendation = async (workflowId: string | undefined, action: string) => {
+      if (!workflowId) return;
+      await db.from("recovery_workflows").update({
+        status: "awaiting_approval",
+        recommended_action: action,
+        updated_at: new Date().toISOString()
+      }).eq("id", workflowId);
+    };
+
     // 1. Alex - Expired Card
-    await processPaymentEvent({
+    const alexRes = await processPaymentEvent({
       provider: "razorpay",
       external_event_id: `evt_seed_fail_alex_${Date.now()}`,
       customer_external_id: "cus_alex_123",
@@ -258,9 +268,10 @@ export async function seedDemoData(triggerActiveFailures = false) {
       occurred_at: new Date().toISOString(),
       raw_payload: { seed: true }
     });
+    await applySeededRecommendation(alexRes.workflowId, "send_payment_recovery_email");
 
     // 2. Sarah - Authentication Required
-    await processPaymentEvent({
+    const sarahRes = await processPaymentEvent({
       provider: "razorpay",
       external_event_id: `evt_seed_fail_sarah_${Date.now()}`,
       customer_external_id: "cus_sarah_456",
@@ -274,9 +285,10 @@ export async function seedDemoData(triggerActiveFailures = false) {
       occurred_at: new Date().toISOString(),
       raw_payload: { seed: true }
     });
+    await applySeededRecommendation(sarahRes.workflowId, "send_payment_recovery_email");
 
     // 3. John - Insufficient Funds
-    await processPaymentEvent({
+    const johnRes = await processPaymentEvent({
       provider: "razorpay",
       external_event_id: `evt_seed_fail_john_${Date.now()}`,
       customer_external_id: "cus_john_789",
@@ -290,9 +302,10 @@ export async function seedDemoData(triggerActiveFailures = false) {
       occurred_at: new Date().toISOString(),
       raw_payload: { seed: true }
     });
+    await applySeededRecommendation(johnRes.workflowId, "no_action");
 
     // 4. Maya - Multiple Declines (4th Attempt)
-    await processPaymentEvent({
+    const mayaRes = await processPaymentEvent({
       provider: "razorpay",
       external_event_id: `evt_seed_fail_maya_${Date.now()}`,
       customer_external_id: "cus_maya_101",
@@ -306,9 +319,10 @@ export async function seedDemoData(triggerActiveFailures = false) {
       occurred_at: new Date().toISOString(),
       raw_payload: { seed: true }
     });
+    await applySeededRecommendation(mayaRes.workflowId, "send_payment_recovery_email");
 
     // 5. Daniel - Cancelled Subscription
-    await processPaymentEvent({
+    const danielRes = await processPaymentEvent({
       provider: "razorpay",
       external_event_id: `evt_seed_fail_daniel_${Date.now()}`,
       customer_external_id: "cus_daniel_202",
@@ -322,9 +336,10 @@ export async function seedDemoData(triggerActiveFailures = false) {
       occurred_at: new Date().toISOString(),
       raw_payload: { seed: true }
     });
+    await applySeededRecommendation(danielRes.workflowId, "no_action");
 
     // 6. Clara - Paused Subscription + Processing Error
-    await processPaymentEvent({
+    const claraRes = await processPaymentEvent({
       provider: "razorpay",
       external_event_id: `evt_seed_fail_clara_${Date.now()}`,
       customer_external_id: "cus_clara_303",
@@ -338,9 +353,10 @@ export async function seedDemoData(triggerActiveFailures = false) {
       occurred_at: new Date().toISOString(),
       raw_payload: { seed: true }
     });
+    await applySeededRecommendation(claraRes.workflowId, "send_payment_recovery_email");
 
     // 7. James - Cancelled Subscription + Card Declined
-    await processPaymentEvent({
+    const jamesRes = await processPaymentEvent({
       provider: "razorpay",
       external_event_id: `evt_seed_fail_james_${Date.now()}`,
       customer_external_id: "cus_james_404",
@@ -354,6 +370,7 @@ export async function seedDemoData(triggerActiveFailures = false) {
       occurred_at: new Date().toISOString(),
       raw_payload: { seed: true }
     });
+    await applySeededRecommendation(jamesRes.workflowId, "no_action");
   }
 
   console.log("Seeding finished successfully!");
