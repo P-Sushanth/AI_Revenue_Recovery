@@ -105,6 +105,7 @@ export default function Dashboard() {
   const [modelInstalled, setModelInstalled] = useState<boolean | null>(null);
   const [targetModel, setTargetModel] = useState("qwen3.5:9b");
   const [checkingHealth, setCheckingHealth] = useState(false);
+  const [isHostedDemo, setIsHostedDemo] = useState(false);
 
   // Raw Bank Log AI Explainer state
   const [rawBankLog, setRawBankLog] = useState("");
@@ -150,13 +151,16 @@ export default function Dashboard() {
         setOllamaReachable(result.health.reachable);
         setModelInstalled(result.health.modelAvailable);
         setTargetModel(result.health.model || "qwen3.5:9b");
+        setIsHostedDemo(Boolean(result.health.isHostedDemo));
       } else {
         setOllamaReachable(false);
         setModelInstalled(false);
+        setIsHostedDemo(false);
       }
     } catch (err) {
       setOllamaReachable(false);
       setModelInstalled(false);
+      setIsHostedDemo(false);
     } finally {
       setCheckingHealth(false);
     }
@@ -476,8 +480,28 @@ export default function Dashboard() {
  
       {/* Main Container */}
       <main className="max-w-7xl mx-auto px-6 mt-8 space-y-8">
-        {/* Offline & Fail warning Callouts */}
-        {ollamaReachable === false && (
+        {/* Hosted Demo Mode Notice for visitors who don't clone the repo */}
+        {isHostedDemo && (
+          <div className="bg-amber-50/70 border border-amber-200/80 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-amber-950 shadow-sm">
+            <div className="flex items-center gap-3">
+              <Sparkles className="h-5 w-5 text-amber-600 shrink-0" />
+              <div>
+                <span className="font-bold text-amber-900 text-sm">Cloud Demonstration Mode Active</span>
+                <p className="text-neutral-600 text-xs mt-0.5 leading-relaxed">
+                  Autonomous AI heuristics are enabled so you can run end-to-end simulations and test raw bank logs without cloning the repository or starting Ollama.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
+              <span className="text-[11px] font-semibold text-amber-800 bg-amber-100/90 border border-amber-200 px-2.5 py-1 rounded-lg">
+                Zero Setup Required
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* Offline & Fail warning Callouts (only when NOT in hosted demo mode) */}
+        {!isHostedDemo && ollamaReachable === false && (
           <div className="bg-rose-50 border border-rose-100 rounded-2xl p-5 flex gap-4 text-rose-900">
             <AlertTriangle className="h-6 w-6 text-rose-500 shrink-0 mt-0.5" />
             <div className="flex-1">
@@ -497,7 +521,7 @@ export default function Dashboard() {
           </div>
         )}
 
-        {ollamaReachable === true && modelInstalled === false && (
+        {!isHostedDemo && ollamaReachable === true && modelInstalled === false && (
           <div className="bg-amber-50 border border-amber-100 rounded-2xl p-5 flex gap-4 text-amber-900">
             <AlertTriangle className="h-6 w-6 text-amber-500 shrink-0 mt-0.5" />
             <div className="flex-1">
