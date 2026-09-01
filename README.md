@@ -143,7 +143,7 @@ The system includes 9 pre-seeded demo customer scenarios covering all risk score
 
 ## 9. Demo / Screenshots
 
-![Dashboard Preview](./localhost_dashboard.png)
+![Dashboard Preview](https://raw.githubusercontent.com/P-Sushanth/AI_Revenue_Recovery/main/localhost_dashboard.png?v=3)
 
 ---
 
