@@ -1,10 +1,10 @@
 # AI Revenue Recovery Engine
-> An autonomous agentic AI platform that detects subscription payment failures, diagnoses root causes using a local LLM, and recovers lost recurring revenue through policy-bounded interventions.
+> An autonomous billing intervention platform that detects subscription payment failures, diagnoses root causes using a local LLM, and recovers lost recurring revenue through policy-bounded interventions.
 
 ---
 
 ## 1. The Problem
-SaaS businesses lose **5% to 9% of their Monthly Recurring Revenue (MRR)** every month due to involuntary churn caused by failed subscription payments (expired credit cards, 3D-Secure authentication timeouts, temporary gateway errors, insufficient funds, and regulatory mandate blocks). 
+SaaS businesses lose recurring revenue every month due to involuntary churn caused by failed subscription payments (expired credit cards, 3D-Secure authentication timeouts, temporary gateway errors, insufficient funds, and regulatory mandate blocks). 
 
 Traditional dunning tools rely on rigid, hardcoded rules that fail to differentiate between high-LTV VIP accounts and churn-prone trial users, send generic "card declined" emails, and break when payment processors return raw, non-standardized bank error messages.
 
@@ -15,7 +15,7 @@ The **AI Revenue Recovery Engine** combines deterministic payment event ingestio
 * **Normalizes & Ingests Webhooks**: Processes real-time webhook events from Razorpay and Stripe with strict idempotency.
 * **Calculates Risk & Recoverability Scores**: Computes deterministic risk scores (0–100) and classifies revenue risks into `Critical`, `High`, `Medium`, and `Low`.
 * **Diagnoses via Local AI Agent**: Runs a local Ollama LLM (`qwen3.5:9b`) to parse unstructured bank decline messages, extract root causes, and determine optimal recovery strategies.
-* **Enforces Deterministic Policy Guardrails**: Validates AI recommendations against business policies before taking any intervention action (e.g. blocking emails for cancelled accounts).
+* **Enforces Automated Policy Guardrails**: Validates AI recommendations against deterministic business policies before taking any intervention action (e.g. blocking emails for cancelled accounts).
 * **Executes Automated Interventions**: Dispatches personalized recovery emails containing secure, single-click payment update links (`/update-payment`).
 * **Visualizes Real-Time Metrics**: Renders a warm coffee-themed SaaS dashboard displaying real-time KPI metrics, time-series revenue trends, risk distributions, live system audit logs, and an interactive **Raw Bank Log AI Explainer**.
 
@@ -42,8 +42,8 @@ The **AI Revenue Recovery Engine** combines deterministic payment event ingestio
              │ 3. Output AI Recommendation (send_payment_recovery_email / no_action)
              ▼
 ┌─────────────────────────┐
-│      Policy Engine      │ -> Evaluates Active Subscription & Risk Thresholds
-│       Guardrails        │ -> Approves or Rejects Action (Writes Audit Log)
+│     Automated Policy    │ -> Evaluates Active Subscription & Risk Thresholds
+│     Engine Guardrails   │ -> Approves or Rejects Action (Writes Audit Log)
 └────────────┬────────────┘
              │ 4. Execution Dispatcher
              ▼
@@ -64,14 +64,24 @@ The **AI Revenue Recovery Engine** combines deterministic payment event ingestio
 ## 4. Key Features
 * **Zero-Shot Raw Bank Log AI Explainer**: Interactive playground card to paste or test unstructured, messy bank decline text (e.g. HDFC velocity caps, RBI e-mandate freezes, MCC recurring blocks).
 * **Multi-Provider Webhook Adapters**: Native support for Razorpay and Stripe webhooks with cryptographic HMAC signature verification and idempotency checks.
-* **Deterministic Policy Engine**: Human-in-the-loop safety guardrails preventing accidental email spamming or policy violations.
+* **Automated Policy Guardrails**: Deterministic rules preventing accidental email spamming or policy violations.
 * **Interactive Self-Service Checkout Portal**: Server-rendered `/update-payment` customer card update page that simulates payment retry and atomic database recovery.
-* **100% Privacy & Local LLM Execution**: Runs local Qwen 9B LLM via Ollama without sending sensitive customer financial data to third-party cloud APIs.
+* **Local LLM Inference**: Runs local Qwen 9B LLM via Ollama without sending sensitive customer financial data to third-party cloud APIs.
 * **Dynamic SaaS Dashboard**: Polished warm coffee light theme with Bklit charts, real-time KPI metrics, search/filtering, and live timeline audit trails.
 
 ---
 
-## 5. Architecture
+## 5. Engineering Decisions
+
+* **Local LLM Inference over Cloud APIs**: Selected local Ollama (`qwen3.5:9b`) execution to process sensitive raw payment logs without transmitting financial data to external cloud providers.
+* **Deterministic Policy Engine Gate**: AI recommendations are treated as advisory inputs. An automated policy engine evaluates subscription status and contact history before any recovery action is dispatched.
+* **Decoupled Gateway Adapters**: Implemented standard parser interfaces mapping provider-specific webhook payloads (Razorpay, Stripe) into a unified domain schema.
+* **Idempotent Event Ingestion**: Utilized unique event hashes and database constraints to prevent duplicate processing of re-sent webhooks.
+* **Strict Runtime Type Safety**: Enforced runtime Zod validation across database entities, webhook payloads, and LLM JSON outputs.
+
+---
+
+## 6. Architecture
 
 ```text
 ┌────────────────────────────────────────────────────────────────────────┐
@@ -103,7 +113,7 @@ The **AI Revenue Recovery Engine** combines deterministic payment event ingestio
 
 ---
 
-## 6. Tech Stack
+## 7. Tech Stack
 * **Framework**: Next.js 16 (App Router, React 19, TypeScript)
 * **Styling**: Vanilla CSS, Tailwind CSS v4, Lucide Icons, Custom Coffee Light Design Token System (`#F7F2EC`)
 * **Typography**: Google Fonts — **Outfit** (Headings/UI) & **JetBrains Mono** (Metrics/Code/Logs)
@@ -115,8 +125,8 @@ The **AI Revenue Recovery Engine** combines deterministic payment event ingestio
 
 ---
 
-## 7. AI / Agent Design
-The AI agent in `src/lib/ai/recovery-agent.ts` is engineered for **deterministic structure and zero hallucination**:
+## 8. AI / Agent Design
+The AI agent in `src/lib/ai/recovery-agent.ts` is engineered for **constrained structured output**:
 * **System Prompt Isolation**: Untrusted bank messages and customer names are wrapped inside explicit `<raw_log>` XML delimiters to prevent prompt injection.
 * **Deterministic Decoding**: Runs with `temperature: 0.0` and `response_format: { type: "json_object" }` to force strict JSON schema outputs.
 * **Schema Validation**: LLM JSON output is validated at runtime using Zod schemas (`aiRecommendationSchema` and `rawBankLogAnalysisSchema`).
@@ -124,7 +134,7 @@ The AI agent in `src/lib/ai/recovery-agent.ts` is engineered for **deterministic
 
 ---
 
-## 8. Revenue Recovery Scenarios
+## 9. Revenue Recovery Scenarios
 The system includes 9 pre-seeded demo customer scenarios covering all risk scores and status states:
 
 | Persona | Subscription Plan | Failure Code / Scenario | Risk Score & Level | Recommended AI Action | Status |
@@ -141,13 +151,13 @@ The system includes 9 pre-seeded demo customer scenarios covering all risk score
 
 ---
 
-## 9. Demo / Screenshots
+## 10. Demo / Screenshots
 
 ![Dashboard Preview](https://raw.githubusercontent.com/P-Sushanth/AI_Revenue_Recovery/main/localhost_dashboard.png?v=3)
 
 ---
 
-## 10. Getting Started
+## 11. Getting Started
 
 ### Prerequisites
 * **Node.js**: v18.0.0 or higher
@@ -159,7 +169,7 @@ The system includes 9 pre-seeded demo customer scenarios covering all risk score
 
 ---
 
-## 11. Environment Variables
+## 12. Environment Variables
 Create a `.env.local` file in the root directory:
 
 ```env
@@ -190,7 +200,7 @@ RAZORPAY_WEBHOOK_SECRET=xxxx
 
 ---
 
-## 12. Running Locally
+## 13. Running Locally
 
 1. **Install Dependencies**:
    ```bash
@@ -218,7 +228,7 @@ RAZORPAY_WEBHOOK_SECRET=xxxx
 
 ---
 
-## 13. Demo Mode / Test Data
+## 14. Demo Mode / Test Data
 
 1. **Reset Database Seeds**: Click the **"Reset Seeds"** button in the header toolbar to reset and seed the 9 demo customer personas into Supabase.
 2. **Run End-to-End Recovery Simulation**: Select any persona (e.g. *Alex* or *Maya*) from the Demo Simulator dropdown and click **"Run Demo"**. Watch the AI agent diagnose the risk, pass policy guardrails, and dispatch a simulated email.
@@ -227,7 +237,7 @@ RAZORPAY_WEBHOOK_SECRET=xxxx
 
 ---
 
-## 14. Project Structure
+## 15. Project Structure
 
 ```text
 ├── public/                     # Static SVG graphics & icons
@@ -262,28 +272,28 @@ RAZORPAY_WEBHOOK_SECRET=xxxx
 
 ---
 
-## 15. Limitations & Safety Boundaries
+## 16. Limitations & Safety Boundaries
 * **Policy Guardrails**: The LLM cannot directly execute payments or dispatch emails without passing deterministic policy validation checks.
 * **Mock Gateway Actions**: Live payment retries are simulated in demo mode; production deployment requires active merchant accounts on Razorpay or Stripe.
 * **Hardware Sensitivity**: Local LLM inference speed depends on your machine's CPU/GPU RAM; initial queries may take up to 10–15 seconds while Ollama warms up.
 
 ---
 
-## 16. Future Improvements
+## 17. Future Improvements
 * **Multi-Turn SMS & WhatsApp Agents**: Extend recovery interventions to WhatsApp Business API and SMS channels for high-LTV VIP accounts.
 * **Smart Retry Window Optimization**: Train ML models to predict optimal card re-charge windows (e.g. salary dates, 1st of the month).
 * **Multi-Gateway Routing**: Automatically re-route failed credit card charges to UPI / Netbanking alternatives based on historic regional success rates.
 
 ---
 
-## 17. Why This Matters / Impact
-For a SaaS business generating $1M ARR, recovering even **15% to 20% of failed subscription payments** adds **$15,000 to $20,000 in pure recurring revenue** back to the bottom line every single year — without acquiring a single new customer. 
+## 18. Why This Matters / Impact
+As an illustrative mathematical example, for a hypothetical SaaS business generating $1M ARR experiencing involuntary churn, successfully recovering 15% to 20% of failed payments represents an additional $15,000 to $20,000 in retained annual revenue — achieved without additional customer acquisition costs. 
 
-By combining local AI reasoning with deterministic safety guardrails, SaaS platforms can protect their revenue streams autonomously and ethically.
+By combining local AI reasoning with deterministic safety guardrails, SaaS platforms can protect their revenue streams systematically and ethically.
 
 ---
 
-## 18. Author
+## 19. Author
 * **P. Sushanth**
 * **Project**: AI Revenue Recovery Engine
 * **Repository**: [GitHub — P-Sushanth/AI_Revenue_Recovery](https://github.com/P-Sushanth/AI_Revenue_Recovery)
