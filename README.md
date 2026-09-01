@@ -1,6 +1,11 @@
 # AI Revenue Recovery Engine
 > An autonomous billing intervention platform that detects subscription payment failures, diagnoses root causes using a local LLM, and recovers lost recurring revenue through policy-bounded interventions.
 
+[![Live Demo](https://img.shields.io/badge/Live_Demo-Online-emerald?style=for-the-badge&logo=vercel)](https://ai-revenue-recovery.vercel.app)
+
+> [!NOTE]
+> **Live Demo Notice**: The live web deployment allows exploring dashboard metrics, risk scores, demo customer personas, and workflow drawers. Full end-to-end real-time AI bank log diagnosis requires a running local Ollama instance (`qwen3.5:9b`).
+
 ---
 
 ## 1. The Problem
@@ -21,7 +26,15 @@ The **AI Revenue Recovery Engine** combines deterministic payment event ingestio
 
 ---
 
-## 3. How It Works / Workflow
+## 3. What Makes This Different
+* **Unstructured Bank Log Interpretation**: Traditional dunning platforms rely exclusively on standard gateway failure codes. This system uses a local LLM to parse raw, non-standardized bank error messages (e.g., HDFC velocity caps, RBI e-mandate freezes, MCC recurring blocks).
+* **Deterministic Policy Separation**: AI recommendations are treated purely as advisory inputs. An automated policy engine evaluates subscription state, contact history, and business rules before any action is executed.
+* **Privacy & Local LLM Execution**: Runs local inference (`qwen3.5:9b` via Ollama) without transmitting sensitive customer financial details to third-party cloud LLM APIs.
+* **Zero-Friction Self-Service Recovery**: Dispatches secure, single-click payment update links (`/update-payment`) allowing customers to resolve payment issues instantly.
+
+---
+
+## 4. How It Works / Workflow
 
 ```text
 ┌─────────────────────────┐
@@ -61,7 +74,7 @@ The **AI Revenue Recovery Engine** combines deterministic payment event ingestio
 
 ---
 
-## 4. Key Features
+## 5. Key Features
 * **Zero-Shot Raw Bank Log AI Explainer**: Interactive playground card to paste or test unstructured, messy bank decline text (e.g. HDFC velocity caps, RBI e-mandate freezes, MCC recurring blocks).
 * **Multi-Provider Webhook Adapters**: Native support for Razorpay and Stripe webhooks with cryptographic HMAC signature verification and idempotency checks.
 * **Automated Policy Guardrails**: Deterministic rules preventing accidental email spamming or policy violations.
@@ -71,7 +84,7 @@ The **AI Revenue Recovery Engine** combines deterministic payment event ingestio
 
 ---
 
-## 5. Engineering Decisions
+## 6. Engineering Decisions
 
 * **Local LLM Inference over Cloud APIs**: Selected local Ollama (`qwen3.5:9b`) execution to process sensitive raw payment logs without transmitting financial data to external cloud providers.
 * **Deterministic Policy Engine Gate**: AI recommendations are treated as advisory inputs. An automated policy engine evaluates subscription status and contact history before any recovery action is dispatched.
@@ -81,7 +94,7 @@ The **AI Revenue Recovery Engine** combines deterministic payment event ingestio
 
 ---
 
-## 6. Architecture
+## 7. Architecture
 
 ```text
 ┌────────────────────────────────────────────────────────────────────────┐
@@ -113,7 +126,7 @@ The **AI Revenue Recovery Engine** combines deterministic payment event ingestio
 
 ---
 
-## 7. Tech Stack
+## 8. Tech Stack
 * **Framework**: Next.js 16 (App Router, React 19, TypeScript)
 * **Styling**: Vanilla CSS, Tailwind CSS v4, Lucide Icons, Custom Coffee Light Design Token System (`#F7F2EC`)
 * **Typography**: Google Fonts — **Outfit** (Headings/UI) & **JetBrains Mono** (Metrics/Code/Logs)
@@ -125,7 +138,7 @@ The **AI Revenue Recovery Engine** combines deterministic payment event ingestio
 
 ---
 
-## 8. AI / Agent Design
+## 9. AI / Agent Design
 The AI agent in `src/lib/ai/recovery-agent.ts` is engineered for **constrained structured output**:
 * **System Prompt Isolation**: Untrusted bank messages and customer names are wrapped inside explicit `<raw_log>` XML delimiters to prevent prompt injection.
 * **Deterministic Decoding**: Runs with `temperature: 0.0` and `response_format: { type: "json_object" }` to force strict JSON schema outputs.
@@ -134,7 +147,7 @@ The AI agent in `src/lib/ai/recovery-agent.ts` is engineered for **constrained s
 
 ---
 
-## 9. Revenue Recovery Scenarios
+## 10. Revenue Recovery Scenarios
 The system includes 9 pre-seeded demo customer scenarios covering all risk scores and status states:
 
 | Persona | Subscription Plan | Failure Code / Scenario | Risk Score & Level | Recommended AI Action | Status |
@@ -151,13 +164,13 @@ The system includes 9 pre-seeded demo customer scenarios covering all risk score
 
 ---
 
-## 10. Demo / Screenshots
+## 11. Demo / Screenshots
 
 ![Dashboard Preview](https://raw.githubusercontent.com/P-Sushanth/AI_Revenue_Recovery/main/localhost_dashboard.png?v=3)
 
 ---
 
-## 11. Getting Started
+## 12. Getting Started
 
 ### Prerequisites
 * **Node.js**: v18.0.0 or higher
@@ -169,7 +182,7 @@ The system includes 9 pre-seeded demo customer scenarios covering all risk score
 
 ---
 
-## 12. Environment Variables
+## 13. Environment Variables
 Create a `.env.local` file in the root directory:
 
 ```env
@@ -200,7 +213,7 @@ RAZORPAY_WEBHOOK_SECRET=xxxx
 
 ---
 
-## 13. Running Locally
+## 14. Running Locally
 
 1. **Install Dependencies**:
    ```bash
@@ -228,7 +241,7 @@ RAZORPAY_WEBHOOK_SECRET=xxxx
 
 ---
 
-## 14. Demo Mode / Test Data
+## 15. Demo Mode / Test Data
 
 1. **Reset Database Seeds**: Click the **"Reset Seeds"** button in the header toolbar to reset and seed the 9 demo customer personas into Supabase.
 2. **Run End-to-End Recovery Simulation**: Select any persona (e.g. *Alex* or *Maya*) from the Demo Simulator dropdown and click **"Run Demo"**. Watch the AI agent diagnose the risk, pass policy guardrails, and dispatch a simulated email.
@@ -237,7 +250,7 @@ RAZORPAY_WEBHOOK_SECRET=xxxx
 
 ---
 
-## 15. Project Structure
+## 16. Project Structure
 
 ```text
 ├── public/                     # Static SVG graphics & icons
@@ -272,28 +285,28 @@ RAZORPAY_WEBHOOK_SECRET=xxxx
 
 ---
 
-## 16. Limitations & Safety Boundaries
+## 17. Limitations & Safety Boundaries
 * **Policy Guardrails**: The LLM cannot directly execute payments or dispatch emails without passing deterministic policy validation checks.
 * **Mock Gateway Actions**: Live payment retries are simulated in demo mode; production deployment requires active merchant accounts on Razorpay or Stripe.
 * **Hardware Sensitivity**: Local LLM inference speed depends on your machine's CPU/GPU RAM; initial queries may take up to 10–15 seconds while Ollama warms up.
 
 ---
 
-## 17. Future Improvements
+## 18. Future Improvements
 * **Multi-Turn SMS & WhatsApp Agents**: Extend recovery interventions to WhatsApp Business API and SMS channels for high-LTV VIP accounts.
 * **Smart Retry Window Optimization**: Train ML models to predict optimal card re-charge windows (e.g. salary dates, 1st of the month).
 * **Multi-Gateway Routing**: Automatically re-route failed credit card charges to UPI / Netbanking alternatives based on historic regional success rates.
 
 ---
 
-## 18. Why This Matters / Impact
+## 19. Why This Matters / Impact
 As an illustrative mathematical example, for a hypothetical SaaS business generating $1M ARR experiencing involuntary churn, successfully recovering 15% to 20% of failed payments represents an additional $15,000 to $20,000 in retained annual revenue — achieved without additional customer acquisition costs. 
 
 By combining local AI reasoning with deterministic safety guardrails, SaaS platforms can protect their revenue streams systematically and ethically.
 
 ---
 
-## 19. Author
+## 20. Author
 * **P. Sushanth**
 * **Project**: AI Revenue Recovery Engine
 * **Repository**: [GitHub — P-Sushanth/AI_Revenue_Recovery](https://github.com/P-Sushanth/AI_Revenue_Recovery)
