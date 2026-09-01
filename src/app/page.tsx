@@ -277,18 +277,45 @@ export default function Dashboard() {
       // Step 1: Normalization
       await new Promise((resolve) => setTimeout(resolve, 800));
       setDemoStep(2);
-      const code = selectedCase === "sarah" ? "authentication_required" : selectedCase === "john" ? "insufficient_funds" : selectedCase === "clara" ? "processing_error" : selectedCase === "maya" ? "card_declined" : "expired_card";
+      const codeMap: Record<string, string> = {
+        sarah: "authentication_required",
+        anita: "authentication_required",
+        john: "insufficient_funds",
+        clara: "processing_error",
+        rohan: "processing_error",
+        maya: "card_declined",
+        james: "card_declined",
+        daniel: "expired_card",
+        alex: "expired_card",
+      };
+      const code = codeMap[selectedCase] || "expired_card";
       setSimulationLogs(prev => [...prev, `✓ Normalized Razorpay decline payload (${code})`, "Inserting risk analysis into database..."]);
  
       // Step 2: Risk Scoring
       await new Promise((resolve) => setTimeout(resolve, 800));
       setDemoStep(3);
-      const score = selectedCase === "clara" ? "40/100 (MEDIUM)" : selectedCase === "james" ? "30/100 (MEDIUM)" : selectedCase === "john" ? "60/100 (HIGH)" : selectedCase === "maya" ? "90/100 (CRITICAL)" : "55/100 (HIGH)";
-      const index = selectedCase === "john" ? "50/100 (MEDIUM)" : selectedCase === "james" ? "40/100 (MEDIUM)" : "85/100 (HIGH)";
+      const scoreMap: Record<string, { score: string; index: string }> = {
+        clara: { score: "40/100 (MEDIUM)", index: "85/100 (HIGH)" },
+        james: { score: "30/100 (MEDIUM)", index: "40/100 (MEDIUM)" },
+        john: { score: "60/100 (HIGH)", index: "50/100 (MEDIUM)" },
+        maya: { score: "90/100 (CRITICAL)", index: "85/100 (HIGH)" },
+        daniel: { score: "70/100 (HIGH)", index: "20/100 (LOW)" },
+        rohan: { score: "20/100 (LOW)", index: "90/100 (HIGH)" },
+        anita: { score: "80/100 (HIGH)", index: "75/100 (HIGH)" },
+        sarah: { score: "50/100 (HIGH)", index: "80/100 (HIGH)" },
+        alex: { score: "55/100 (HIGH)", index: "85/100 (HIGH)" },
+      };
+      const score = scoreMap[selectedCase]?.score || "55/100 (HIGH)";
+      const index = scoreMap[selectedCase]?.index || "85/100 (HIGH)";
       setSimulationLogs(prev => [...prev, `✓ Risk score calculated: ${score}`, `✓ Recoverability index: ${index}`, "Workflow registered: STATUS PENDING"]);
  
-      // Step 3: LLM Analysis (Calls /api/demo/simulate-loop)
-      setSimulationLogs(prev => [...prev, "Invocating local Ollama Qwen model... (Please wait)"]);
+      // Step 3: LLM / Heuristic Analysis (Calls /api/demo/simulate-loop)
+      setSimulationLogs(prev => [
+        ...prev, 
+        isHostedDemo 
+          ? "Invocating Autonomous AI Agent Diagnosis (Cloud Mode)..." 
+          : "Invocating local Ollama Qwen model... (Please wait)"
+      ]);
       
       const res = await fetch(`/api/demo/simulate-loop?case=${selectedCase}`, { method: "POST" });
       const result = await res.json();
@@ -622,7 +649,7 @@ export default function Dashboard() {
                     {demoStep >= 4 ? <Check className="h-3.5 w-3.5" /> : "3"}
                   </div>
                   <span className={`text-sm ${demoStep >= 3 ? "text-neutral-800 font-medium" : "text-neutral-400"}`}>
-                    Local Ollama AI Diagnosis complete
+                    {isHostedDemo ? "Autonomous Cloud AI Diagnosis complete" : "Local Ollama AI Diagnosis complete"}
                   </span>
                 </div>
  
