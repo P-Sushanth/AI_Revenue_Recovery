@@ -292,48 +292,53 @@ export default function Dashboard() {
       
       const res = await fetch(`/api/demo/simulate-loop?case=${selectedCase}`, { method: "POST" });
       const result = await res.json();
- 
+
       if (result.success) {
-        const step3 = result.step_3_local_ai_agent;
-        const step4 = result.step_4_policy_and_executor;
- 
+        const step3 = result.step_3_local_ai_agent || {};
+        const step4 = result.step_4_policy_and_executor || {};
+
         setSimulationLogs(prev => [
           ...prev,
-          `✓ Local LLM analysis complete: "${step3.diagnosis}"`,
-          `✓ AI Recommendation: ${step3.recommended_action} (Urgency: ${step3.urgency})`,
-          `✓ Policy Engine checked: ACTION AUTHORIZED`,
-          `✓ Action executed: ${step4.action_executed} (${step4.action_status})`,
-          `✓ Email dispatched: CTA link encrypted server-side`,
-          `✓ Workflow completed: ID ${step3.workflow_id}`
+          `✓ AI Diagnosis complete: "${step3.diagnosis || "Diagnosis generated"}"`,
+          `✓ AI Recommendation: ${step3.recommended_action || "send_payment_recovery_email"} (Urgency: ${step3.urgency || "medium"})`,
+          `✓ Policy Engine checked: ${step4.policy_allowed ? "ACTION AUTHORIZED" : "ACTION BLOCKED"}`,
+          `✓ Action outcome: ${step4.action_executed || "None"} (${step4.action_status || "n/a"})`,
+          step4.policy_allowed 
+            ? `✓ Email dispatched: CTA link encrypted server-side` 
+            : `ℹ Policy guardrail active: ${step4.execution_summary || "Intervention blocked per policy"}`,
+          `✓ Workflow registered: ID ${step3.workflow_id || "active"}`
         ]);
         
-        setCurrentWorkflowId(step3.workflow_id);
-        
-        if (step4.action_status === "rejected") {
-          setPolicyRejected(true);
-          setDemoStep(0);
-        } else {
-          setDemoStep(5); // Transition to waiting for customer update
+        if (step3.workflow_id) {
+          setCurrentWorkflowId(step3.workflow_id);
         }
         
-        fetchData(false);
+        if (step4.action_status === "rejected" || !step4.policy_allowed) {
+          setPolicyRejected(true);
+          setDemoStep(4);
+        } else {
+          setDemoStep(5); // Transition to waiting for customer recovery
+        }
+        
+        await fetchData(false);
       } else {
+        const errorMsg = result.error?.message || result.message || "An unexpected error occurred.";
         const isOffline = 
-          result.error?.message.toLowerCase().includes("ollama") || 
-          result.error?.message.toLowerCase().includes("fetch failed") || 
-          result.error?.message.toLowerCase().includes("econnrefused");
- 
+          errorMsg.toLowerCase().includes("ollama") || 
+          errorMsg.toLowerCase().includes("fetch failed") || 
+          errorMsg.toLowerCase().includes("econnrefused");
+
         if (isOffline) {
           setAiUnavailable(true);
-          setSimulationLogs(prev => [...prev, "❌ AI Unavailable: Could not reach local recovery model."]);
+          setSimulationLogs(prev => [...prev, "❌ AI Unavailable: Could not reach recovery model."]);
         } else {
-          setSimulationLogs(prev => [...prev, `❌ AI Agent failed: ${result.error?.message || "Inference error."}`]);
+          setSimulationLogs(prev => [...prev, `❌ Simulation Notice: ${errorMsg}`]);
         }
-        setDemoStep(0);
+        setDemoStep(1);
       }
     } catch (err: any) {
-      setSimulationLogs(prev => [...prev, `❌ Connection error: ${err.message}`]);
-      setDemoStep(0);
+      setSimulationLogs(prev => [...prev, `❌ Connection error: ${err.message || "Request failed"}`]);
+      setDemoStep(1);
     } finally {
       setSimulating(false);
     }

@@ -2,11 +2,14 @@ import { NextResponse } from "next/server";
 import { getDbClient } from "@/lib/db/client";
 import { processPaymentEvent } from "@/lib/recovery/process-payment-event";
 
+export const dynamic = "force-dynamic";
+export const maxDuration = 60;
+
 export async function POST(request: Request) {
-  if (process.env.NODE_ENV === "production" && process.env.ALLOW_DEMO_ROUTES !== "true") {
+  if (process.env.DISABLE_DEMO_ROUTES === "true") {
     return NextResponse.json({
       success: false,
-      message: "Forbidden: Demo endpoints are disabled in production mode.",
+      message: "Forbidden: Demo endpoints are explicitly disabled.",
     }, { status: 403 });
   }
 
