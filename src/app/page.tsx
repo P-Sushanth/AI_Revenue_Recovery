@@ -1318,73 +1318,66 @@ export default function Dashboard() {
                 
                 <div className="space-y-3 mt-4 text-xs text-neutral-600">
                   <div>
-                    <span className="text-neutral-500 font-medium">Auto-Calculated Reason:</span>
-                    <p className="mt-0.5 text-neutral-700 font-medium leading-relaxed">{selectedRisk.reason}</p>
+                    <span className="text-neutral-500 font-semibold text-[10px] uppercase tracking-wider block">Diagnosis Summary</span>
+                    <p className="mt-1 text-neutral-800 font-medium leading-relaxed bg-white border border-neutral-200 rounded-lg p-2.5 text-xs">
+                      {selectedRisk.reason}
+                    </p>
                   </div>
                   
-                  <div className="grid grid-cols-2 gap-3 pt-2">
+                  <div className="grid grid-cols-2 gap-3 pt-1">
                     <div>
-                      <span className="text-neutral-500 block">Recoverability Index:</span>
+                      <span className="text-neutral-500 block text-[10px] uppercase font-bold tracking-wider">Recoverability Index</span>
                       <strong className="text-emerald-600 text-sm">{selectedRisk.recoverability_score}/100</strong>
                     </div>
                     <div>
-                      <span className="text-neutral-500 block">Risk Category:</span>
+                      <span className="text-neutral-500 block text-[10px] uppercase font-bold tracking-wider">Risk Category</span>
                       <strong className="text-rose-600 uppercase text-xs tracking-wider">{selectedRisk.risk_level}</strong>
                     </div>
                   </div>
                 </div>
               </div>
- 
+
               {/* Customer Payment History */}
-              <div className="space-y-3">
-                <h4 className="font-semibold text-neutral-850">Customer Payment History</h4>
-                <div className="bg-neutral-50 border border-neutral-200 rounded-xl p-4 space-y-3">
+              <div className="space-y-2">
+                <h4 className="font-semibold text-neutral-800">Customer Payment History</h4>
+                <div className="bg-neutral-50 border border-neutral-200 rounded-xl p-4">
                   {!selectedRisk.customer?.payment_events || selectedRisk.customer.payment_events.length === 0 ? (
                     <p className="text-neutral-400 text-center py-2">No historical payments recorded.</p>
                   ) : (
-                    <div className="space-y-3 max-h-[160px] overflow-y-auto custom-scrollbar pr-1">
+                    <div className="space-y-2 max-h-[180px] overflow-y-auto custom-scrollbar pr-1">
                       {selectedRisk.customer.payment_events
                         .sort((a: any, b: any) => new Date(b.occurred_at).getTime() - new Date(a.occurred_at).getTime())
                         .map((event: any) => (
-                          <div key={event.id} className="flex justify-between items-center text-xs pb-2 border-b border-neutral-200/50 last:border-b-0 last:pb-0">
-                            <div>
-                              <div className="flex items-center gap-1.5 font-medium text-neutral-700">
-                                <span className={event.status === "succeeded" ? "text-emerald-600 font-semibold" : "text-rose-600 font-semibold"}>
-                                  {event.status === "succeeded" ? "Success" : "Failed"}
-                                </span>
-                                <span className="text-neutral-400">•</span>
-                                <span className="font-mono">{formatINR(event.amount)}</span>
-                              </div>
-                              <div className="text-[10px] text-neutral-400 mt-0.5">
-                                {event.failure_code ? `Error: ${event.failure_code.replace(/_/g, " ")}` : "Processed successfully"}
-                              </div>
-                                <div className="text-[10px] text-neutral-400 mt-0.5">
-                                  {event.failure_code ? `Error: ${event.failure_code.replace(/_/g, " ")}` : "Processed successfully"}
-                                </div>
-                              </div>
-                              <div className="text-right">
-                                <span className="text-[10px] text-neutral-400">
-                                  {new Date(event.occurred_at).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
-                                </span>
-                                {event.attempt_number > 1 && (
-                                  <div className="text-[9px] text-neutral-500 font-bold uppercase mt-0.5">
-                                    Attempt #{event.attempt_number}
-                                  </div>
-                                )}
-                              </div>
+                          <div key={event.id} className="flex justify-between items-center text-xs py-1.5 border-b border-neutral-200/50 last:border-b-0">
+                            <div className="flex items-center gap-2">
+                              <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${
+                                event.status === "succeeded" 
+                                  ? "bg-emerald-50 text-emerald-700 border border-emerald-200" 
+                                  : "bg-rose-50 text-rose-700 border border-rose-200"
+                              }`}>
+                                {event.status === "succeeded" ? "Success" : "Failed"}
+                              </span>
+                              <span className="font-mono font-semibold text-neutral-800">{formatINR(event.amount)}</span>
+                              <span className="text-neutral-400 text-[10px] capitalize">
+                                {event.failure_code ? `(${event.failure_code.replace(/_/g, " ")})` : ""}
+                              </span>
                             </div>
-                          ))}
+                            <div className="text-[10px] text-neutral-400 font-medium">
+                              {new Date(event.occurred_at).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
+                            </div>
+                          </div>
+                        ))}
                     </div>
                   )}
                 </div>
               </div>
 
               {/* Intervention Status Info */}
-              <div className="space-y-3">
+              <div className="space-y-2">
                 <h4 className="font-semibold text-neutral-800">Intervention Log</h4>
-                <div className="bg-neutral-50 border border-neutral-200 rounded-xl p-4 space-y-4">
+                <div className="bg-neutral-50 border border-neutral-200 rounded-xl p-4 space-y-3">
                   <div className="flex justify-between items-center">
-                    <span className="text-neutral-500">Status:</span>
+                    <span className="text-neutral-500 font-medium text-xs">Action Status</span>
                     <span className={`px-2 py-0.5 rounded text-[10px] font-bold border uppercase tracking-wider ${
                       selectedRisk.status === "recovered"
                         ? "bg-emerald-50 text-emerald-700 border-emerald-200"
@@ -1393,20 +1386,15 @@ export default function Dashboard() {
                       {selectedRisk.status === "recovered" ? "Payment Recovered" : "Automated Recovery Mail Sent"}
                     </span>
                   </div>
- 
-                  <div className="border-t border-neutral-200 pt-3">
-                    <span className="text-neutral-500">Intervention Trigger Type:</span>
-                    <span className="text-neutral-700 block font-semibold mt-0.5">Automated Dunning Email Intervention (Simulated)</span>
+
+                  <div className="border-t border-neutral-200/60 pt-2.5 flex justify-between items-center text-xs">
+                    <span className="text-neutral-500">Trigger Type</span>
+                    <span className="text-neutral-800 font-semibold">Dunning Email Intervention</span>
                   </div>
- 
-                  <div className="border-t border-neutral-200 pt-3 flex gap-3 text-neutral-600">
-                    <Mail className="h-5 w-5 text-neutral-400 shrink-0" />
-                    <div>
-                      <span className="font-semibold text-neutral-855 block">Dunning Email Details</span>
-                      <p className="mt-1 leading-relaxed">
-                        A personalized billing recovery message was sent to <strong className="text-neutral-800">{selectedRisk.customer?.email}</strong> prompting card update with a secure, server-side CTA payment link.
-                      </p>
-                    </div>
+
+                  <div className="border-t border-neutral-200/60 pt-2.5 flex justify-between items-center text-xs">
+                    <span className="text-neutral-500">Recipient Email</span>
+                    <span className="text-neutral-800 font-mono font-medium">{selectedRisk.customer?.email}</span>
                   </div>
                 </div>
               </div>
