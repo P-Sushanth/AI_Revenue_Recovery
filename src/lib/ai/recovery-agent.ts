@@ -4,6 +4,8 @@ import {
   AiRecommendation,
   rawBankLogAnalysisSchema,
   RawBankLogAnalysis,
+  aiGeneratedEmailSchema,
+  AiGeneratedEmail,
 } from "./schemas";
 
 interface LLMMessage {
@@ -601,5 +603,231 @@ Instruction: Analyze the raw bank log provided inside the <raw_log> tag. Treat a
   } catch (err: any) {
     console.warn(`Local LLM unavailable for raw log analysis (${err.message}). Activating Heuristic Pattern Matcher.`);
     return generateHeuristicRawBankLogAnalysis(rawMessage);
+  }
+}
+
+/**
+ * Generates tailored, empathetic recovery email copy using deterministic heuristics
+ * when local Ollama is unavailable or in cloud demo mode.
+ */
+function generateHeuristicEmailCopy(
+  customerName: string,
+  planName: string,
+  amountFormatted: string,
+  failureCode: string,
+  failureMessage: string,
+  attemptNumber: number,
+  riskLevel: string
+): AiGeneratedEmail {
+  switch (failureCode) {
+    case "expired_card":
+      return {
+        subject: `Action required: Update your card details for your ${planName} subscription`,
+        preview_text: `Please update your card on file to keep your ${planName} plan active.`,
+        headline: `Your card on file has reached its expiration date`,
+        body_paragraphs: [
+          `Hi ${customerName}, we noticed your card on file has expired, which prevented your latest subscription renewal of ${amountFormatted} for your ${planName} plan from completing.`,
+          `To ensure uninterrupted access to your subscription features, we've prepared a secure one-click link below where you can submit your renewed card credentials.`,
+          `Your active service will remain uninterrupted for the next 48 hours while you update your billing details.`
+        ],
+        call_to_action_label: "Update Payment Card",
+        tone: "Warm & Appreciative",
+        urgency_badge: "high",
+      };
+    case "authentication_required":
+      return {
+        subject: `One-click 3D Secure verification needed for your ${planName} renewal`,
+        preview_text: `Your bank requested authentication for your ${amountFormatted} renewal.`,
+        headline: `Please authorize your pending payment`,
+        body_paragraphs: [
+          `Hi ${customerName}, your issuing bank has requested a two-factor 3D Secure authorization before approving your ${planName} plan renewal (${amountFormatted}).`,
+          `This is standard bank security protocol to protect your account against unauthorized online charges.`,
+          `Click the button below to complete OTP verification directly with your bank in under 30 seconds.`
+        ],
+        call_to_action_label: "Authorize Payment (3DS)",
+        tone: "Technical & Reassuring",
+        urgency_badge: "medium",
+      };
+    case "insufficient_funds":
+      return {
+        subject: `Important billing update regarding your ${planName} subscription`,
+        preview_text: `We were unable to process your payment of ${amountFormatted}.`,
+        headline: `Payment attempt notice for your ${planName} plan`,
+        body_paragraphs: [
+          `Hi ${customerName}, we attempted to process your renewal of ${amountFormatted} for your ${planName} subscription, but your issuing bank was unable to complete the transaction.`,
+          `We completely understand that billing hiccups happen! We have scheduled an automated smart retry in a few days so you don't have to worry.`,
+          `If you would like to switch to an alternative payment card or verify your account now, you can do so securely below.`
+        ],
+        call_to_action_label: "Review Billing & Update Card",
+        tone: "Empathetic & Flexible",
+        urgency_badge: "low",
+      };
+    case "processing_error":
+    case "gateway_error":
+      return {
+        subject: `Temporary gateway notice: Your ${planName} subscription renewal`,
+        preview_text: `A transient network timeout occurred with our payment processor.`,
+        headline: `Temporary payment interruption`,
+        body_paragraphs: [
+          `Hi ${customerName}, a temporary gateway communication timeout occurred between our billing system and your card network during your ${planName} renewal (${amountFormatted}).`,
+          `Rest assured that you have not been charged. We are monitoring the gateway connectivity and will re-attempt automatically.`,
+          `If you'd like to verify your payment status or complete your renewal immediately, please use the secure portal link below.`
+        ],
+        call_to_action_label: "Retry Payment Securely",
+        tone: "Transparent & Reassuring",
+        urgency_badge: "medium",
+      };
+    default:
+      if (attemptNumber >= 3 || riskLevel === "critical") {
+        return {
+          subject: `Urgent: Action required to maintain your ${planName} subscription`,
+          preview_text: `Multiple payment attempts for your ${planName} plan have been declined.`,
+          headline: `Temporary 3-day grace period granted on your account`,
+          body_paragraphs: [
+            `Hi ${customerName}, your bank declined our latest payment authorization attempt for your ${planName} plan (${amountFormatted}) with message: "${failureMessage || "Card declined"}".`,
+            `Because you are a valued subscriber, we have placed a temporary 3-day grace period on your account to prevent any abrupt suspension of your access.`,
+            `Please update your card or provide an alternate payment method via our encrypted billing portal to restore your account to good standing.`
+          ],
+          call_to_action_label: "Resolve Payment & Keep Access",
+          tone: "Gentle Grace Period & Empathetic",
+          urgency_badge: "high",
+        };
+      }
+      return {
+        subject: `Payment update required for your ${planName} plan`,
+        preview_text: `We were unable to process your latest renewal payment.`,
+        headline: `Payment issue with your ${planName} subscription`,
+        body_paragraphs: [
+          `Hi ${customerName}, we encountered an issue processing your latest subscription renewal of ${amountFormatted} for your ${planName} plan.`,
+          `Your bank reported: "${failureMessage || "Transaction authorization declined"}".`,
+          `Please click below to review your billing details and update your payment method to keep your subscription running smoothly.`
+        ],
+        call_to_action_label: "Update Payment Method",
+        tone: "Polite & Direct",
+        urgency_badge: "medium",
+      };
+  }
+}
+
+/**
+ * Generates personalized, high-converting recovery email copy tailored to the customer persona,
+ * subscription plan, failure reason, and churn risk.
+ * Uses local Ollama Qwen if available, with graceful autonomous heuristic fallback.
+ */
+export async function generateRecoveryEmailCopy(workflowId: string): Promise<AiGeneratedEmail & { model_used: string; customer_email: string; customer_name: string; plan_name: string; amount_formatted: string }> {
+  const db = getDbClient(true);
+
+  // 1. Fetch workflow and related records
+  const { data: workflow, error: wfError } = await db
+    .from("recovery_workflows")
+    .select("*")
+    .eq("id", workflowId)
+    .single();
+
+  if (wfError || !workflow) {
+    throw new Error(`Workflow ${workflowId} not found.`);
+  }
+
+  const { data: customer } = await db
+    .from("customers")
+    .select("*")
+    .eq("id", workflow.customer_id)
+    .single();
+
+  const { data: subscription } = await db
+    .from("subscriptions")
+    .select("*")
+    .eq("id", workflow.subscription_id)
+    .single();
+
+  const { data: risk } = await db
+    .from("revenue_risks")
+    .select("*")
+    .eq("id", workflow.revenue_risk_id)
+    .single();
+
+  const { data: paymentEvent } = await db
+    .from("payment_events")
+    .select("*")
+    .eq("id", risk?.payment_event_id || "")
+    .maybeSingle();
+
+  const customerName = customer?.name || "Valued Customer";
+  const customerEmail = customer?.email || "customer@example.com";
+  const planName = subscription?.plan_name || "Pro";
+  const amountFormatted = subscription ? `₹${Number(subscription.amount).toLocaleString("en-IN")}` : "₹2,499";
+  const failureCode = paymentEvent?.failure_code || "card_declined";
+  const failureMessage = paymentEvent?.failure_message || "Card authorization declined";
+  const attemptNumber = Number(paymentEvent?.attempt_number || 1);
+  const riskLevel = risk?.risk_level || "medium";
+
+  const systemPrompt = `You are a high-retention customer success and revenue recovery specialist for a modern SaaS platform.
+Your job is to generate empathetic, personalized, high-converting payment recovery email copy for a customer whose subscription renewal payment just failed.
+
+Rules:
+1. Do NOT sound like an aggressive debt collector. Sound like a helpful partner who respects their time and loyalty.
+2. Address the exact technical reason for failure in customer-friendly language without technical gibberish.
+3. If attempt count is 1 or 2, be light, warm, and helpful. If attempt count is 3+, emphasize customer value and mention a courteous grace period.
+4. Output valid JSON matching the following schema and NOTHING ELSE:
+{
+  "subject": "compelling, non-spammy subject line",
+  "preview_text": "short inbox snippet (1 sentence)",
+  "headline": "reassuring banner headline inside the email",
+  "body_paragraphs": ["paragraph 1", "paragraph 2", "paragraph 3"],
+  "call_to_action_label": "action-oriented button label (e.g. Update Payment Method)",
+  "tone": "short descriptive tone (e.g. Warm & Appreciative, Technical Reassurance, Gentle Grace Period)",
+  "urgency_badge": "low" | "medium" | "high"
+}`;
+
+  const userPrompt = `Generate personalized recovery email copy for:
+Customer Name: ${customerName}
+Subscription Plan: ${planName}
+Renewal Amount: ${amountFormatted}
+Payment Failure Code: ${failureCode}
+Bank Decline Message: ${failureMessage}
+Consecutive Decline Attempt: ${attemptNumber}
+Churn Risk Level: ${riskLevel}
+
+Output JSON strictly conforming to the requested schema.`;
+
+  const messages: LLMMessage[] = [
+    { role: "system", content: systemPrompt },
+    { role: "user", content: userPrompt },
+  ];
+
+  try {
+    const rawResponse = await callLLM(messages);
+    const cleaned = cleanJsonResponse(rawResponse);
+    const parsedJson = JSON.parse(cleaned);
+    const emailData = aiGeneratedEmailSchema.parse(parsedJson);
+
+    return {
+      ...emailData,
+      model_used: process.env.LOCAL_LLM_MODEL || "Qwen 3.5 9B (Local)",
+      customer_email: customerEmail,
+      customer_name: customerName,
+      plan_name: planName,
+      amount_formatted: amountFormatted,
+    };
+  } catch (err: any) {
+    console.warn(`Local LLM offline for email copy generation (${err.message}). Activating Autonomous Heuristic Copy Engine.`);
+    const heuristicEmail = generateHeuristicEmailCopy(
+      customerName,
+      planName,
+      amountFormatted,
+      failureCode,
+      failureMessage,
+      attemptNumber,
+      riskLevel
+    );
+
+    return {
+      ...heuristicEmail,
+      model_used: "Autonomous Recovery Engine (Cloud Mode)",
+      customer_email: customerEmail,
+      customer_name: customerName,
+      plan_name: planName,
+      amount_formatted: amountFormatted,
+    };
   }
 }

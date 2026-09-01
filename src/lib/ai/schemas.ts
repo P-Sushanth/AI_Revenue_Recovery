@@ -22,3 +22,15 @@ export const rawBankLogAnalysisSchema = z.object({
 });
 
 export type RawBankLogAnalysis = z.infer<typeof rawBankLogAnalysisSchema>;
+
+export const aiGeneratedEmailSchema = z.object({
+  subject: z.string().min(1, "Subject is required"),
+  preview_text: z.string().min(1, "Preview text is required"),
+  headline: z.string().min(1, "Headline is required"),
+  body_paragraphs: z.array(z.string()).min(1, "At least one paragraph is required"),
+  call_to_action_label: z.string().min(1, "Call to action is required"),
+  tone: z.string().min(1, "Tone is required"),
+  urgency_badge: z.enum(["low", "medium", "high"]),
+});
+
+export type AiGeneratedEmail = z.infer<typeof aiGeneratedEmailSchema>;

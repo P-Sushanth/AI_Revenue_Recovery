@@ -23,6 +23,7 @@ import {
   Terminal,
   FileText,
   Send,
+  Lock,
 } from "lucide-react";
  
 // Bklit UI components
@@ -139,6 +140,43 @@ export default function Dashboard() {
       setRawAnalysisError(err.message || "Failed to analyze raw bank log.");
     } finally {
       setAnalyzingRawLog(false);
+    }
+  };
+
+  // Dynamic AI-Generated Email Preview Modal state
+  const [emailDrawerOpen, setEmailDrawerOpen] = useState(false);
+  const [emailLoading, setEmailLoading] = useState(false);
+  const [emailData, setEmailData] = useState<any>(null);
+  const [emailError, setEmailError] = useState<string | null>(null);
+
+  const handleOpenEmailPreview = async (workflowId?: string | null) => {
+    let targetId = workflowId || currentWorkflowId;
+    
+    // If no workflow ID provided, fallback to first active workflow in table
+    if (!targetId && data?.risks && data.risks.length > 0) {
+      targetId = (data.risks[0] as any)?.workflows?.[0]?.id || null;
+    }
+
+    if (!targetId) {
+      alert("Please run a demo simulation first or select a customer to preview their AI-generated recovery email.");
+      return;
+    }
+
+    setEmailDrawerOpen(true);
+    setEmailLoading(true);
+    setEmailError(null);
+
+    try {
+      const res = await fetch(`/api/workflows/${targetId}/email-preview`);
+      const result = await res.json();
+      if (!result.success) {
+        throw new Error(result.error || "Failed to generate AI email preview.");
+      }
+      setEmailData(result.data);
+    } catch (err: any) {
+      setEmailError(err.message || "Failed to load AI email copy.");
+    } finally {
+      setEmailLoading(false);
     }
   };
 
@@ -706,6 +744,13 @@ export default function Dashboard() {
                       Open Checkout Portal
                       <ArrowUpRight className="h-3.5 w-3.5" />
                     </a>
+                    <button
+                      onClick={() => handleOpenEmailPreview(currentWorkflowId)}
+                      className="mt-2 w-full py-2 bg-white hover:bg-neutral-100 text-neutral-800 border border-neutral-300 rounded-lg text-xs font-semibold transition inline-flex items-center justify-center gap-1.5 shadow-sm"
+                    >
+                      <Sparkles className="h-3.5 w-3.5 text-amber-600" />
+                      Preview AI-Generated Email Copy
+                    </button>
                   </>
                 ) : (
                   <>
@@ -1252,13 +1297,27 @@ export default function Dashboard() {
                             </span>
                           </td>
                           <td className="px-4 py-3.5 text-neutral-700 whitespace-nowrap">
-                            <span className="text-[11px] font-medium text-neutral-800 bg-neutral-100 border border-neutral-200/60 px-2 py-0.5 rounded">
-                              {risk.workflows?.[0]?.recommended_action === "send_payment_recovery_email"
-                                ? "Send Recovery Email"
-                                : risk.workflows?.[0]?.recommended_action === "no_action"
-                                ? "No Action"
-                                : "Pending AI"}
-                            </span>
+                            <div className="inline-flex items-center gap-1.5">
+                              <span className="text-[11px] font-medium text-neutral-800 bg-neutral-100 border border-neutral-200/60 px-2 py-0.5 rounded">
+                                {risk.workflows?.[0]?.recommended_action === "send_payment_recovery_email"
+                                  ? "Send Recovery Email"
+                                  : risk.workflows?.[0]?.recommended_action === "no_action"
+                                  ? "No Action"
+                                  : "Pending AI"}
+                              </span>
+                              {risk.workflows?.[0]?.id && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleOpenEmailPreview(risk.workflows[0].id);
+                                  }}
+                                  title="Preview AI-Generated Email Copy"
+                                  className="p-1 text-neutral-400 hover:text-neutral-800 hover:bg-neutral-200/60 rounded transition inline-flex items-center"
+                                >
+                                  <Mail className="h-3.5 w-3.5" />
+                                </button>
+                              )}
+                            </div>
                           </td>
                           <td className="px-4 py-3.5 text-right whitespace-nowrap">
                             <div className="inline-flex items-center gap-2">
@@ -1477,6 +1536,16 @@ export default function Dashboard() {
                     </p>
                   </div>
                   
+                  {selectedRisk.workflows?.[0]?.id && (
+                    <button
+                      onClick={() => handleOpenEmailPreview(selectedRisk.workflows[0].id)}
+                      className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-white hover:bg-neutral-100 text-neutral-800 border border-neutral-300 rounded-lg font-semibold text-xs transition shadow-sm"
+                    >
+                      <Sparkles className="h-3.5 w-3.5 text-amber-600" />
+                      Preview AI-Generated Recovery Email
+                    </button>
+                  )}
+                  
                   <button
                     onClick={() => handleSimulateRecovery(selectedRisk.workflows?.[0]?.id)}
                     disabled={recoveringId !== null}
@@ -1488,6 +1557,176 @@ export default function Dashboard() {
                 </div>
               )}
  
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* AI-Generated Recovery Email Modal */}
+      {emailDrawerOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white border border-neutral-200 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            {/* Modal Header */}
+            <div className="px-6 py-4 border-b border-neutral-100 flex justify-between items-center bg-[#FDFBF7]">
+              <div className="flex items-center gap-3">
+                <div className="h-9 w-9 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center border border-amber-200 shadow-sm shrink-0">
+                  <Mail className="h-5 w-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-bold text-neutral-900 text-sm">AI-Generated Recovery Outreach</h3>
+                    <span className="text-[10px] font-semibold text-amber-800 bg-amber-100/80 border border-amber-300/60 px-2 py-0.5 rounded-full">
+                      Dynamic Copy
+                    </span>
+                  </div>
+                  <p className="text-neutral-500 text-xs mt-0.5">
+                    Synthesized by LLM tailored to customer LTV, plan tier, and failure reason.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setEmailDrawerOpen(false)}
+                className="text-neutral-400 hover:text-neutral-700 bg-neutral-100 hover:bg-neutral-200 p-1.5 rounded-lg transition"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 overflow-y-auto space-y-5 custom-scrollbar text-xs text-neutral-700 bg-neutral-50/40">
+              {emailLoading ? (
+                <div className="py-16 flex flex-col items-center justify-center gap-3 text-neutral-500">
+                  <RefreshCw className="h-8 w-8 text-neutral-700 animate-spin" />
+                  <p className="font-medium text-sm text-neutral-700">Synthesizing personalized recovery email with AI...</p>
+                  <p className="text-xs text-neutral-400">Analyzing customer profile, failure code, and psychographic tone.</p>
+                </div>
+              ) : emailError ? (
+                <div className="p-4 bg-rose-50 border border-rose-200 rounded-xl text-rose-800 space-y-2">
+                  <p className="font-semibold">Failed to generate AI email</p>
+                  <p className="text-xs text-rose-600">{emailError}</p>
+                </div>
+              ) : emailData ? (
+                <>
+                  {/* AI Metadata & Audit Badges */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                    <div className="bg-white border border-neutral-200 rounded-xl p-3 shadow-2xs">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block">AI Model</span>
+                      <span className="font-semibold text-neutral-800 text-[11px] mt-0.5 block truncate" title={emailData.model_used}>
+                        {emailData.model_used}
+                      </span>
+                    </div>
+                    <div className="bg-white border border-neutral-200 rounded-xl p-3 shadow-2xs">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block">Tone Persona</span>
+                      <span className="font-semibold text-amber-800 text-[11px] mt-0.5 block truncate">
+                        {emailData.tone}
+                      </span>
+                    </div>
+                    <div className="bg-white border border-neutral-200 rounded-xl p-3 shadow-2xs">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block">Urgency Rating</span>
+                      <span className={`font-semibold text-[11px] mt-0.5 block uppercase tracking-wider ${
+                        emailData.urgency_badge === "high" ? "text-rose-600" : emailData.urgency_badge === "medium" ? "text-amber-700" : "text-emerald-700"
+                      }`}>
+                        {emailData.urgency_badge} Priority
+                      </span>
+                    </div>
+                    <div className="bg-white border border-neutral-200 rounded-xl p-3 shadow-2xs">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block">Data Privacy</span>
+                      <span className="font-semibold text-emerald-700 text-[11px] mt-0.5 block truncate">
+                        Zero PII Leaked
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Mock Email Client Container */}
+                  <div className="bg-white border border-neutral-200 rounded-2xl shadow-sm overflow-hidden">
+                    {/* Email Headers */}
+                    <div className="px-5 py-3.5 bg-neutral-50/80 border-b border-neutral-100 space-y-1.5 text-[11px]">
+                      <div className="flex items-center gap-2">
+                        <span className="text-neutral-400 w-12 font-medium">From:</span>
+                        <span className="font-medium text-neutral-800">
+                          RecoverAI Billing Operations &lt;billing@recoverai.internal&gt;
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-neutral-400 w-12 font-medium">To:</span>
+                        <span className="font-mono text-neutral-700">
+                          {emailData.customer_name} &lt;{emailData.customer_email}&gt;
+                        </span>
+                      </div>
+                      <div className="flex items-start gap-2 pt-0.5">
+                        <span className="text-neutral-400 w-12 font-medium shrink-0 mt-0.5">Subject:</span>
+                        <strong className="text-neutral-900 font-semibold text-xs leading-snug">
+                          {emailData.subject}
+                        </strong>
+                      </div>
+                      {emailData.preview_text && (
+                        <div className="flex items-start gap-2 text-[10px] text-neutral-500 pt-0.5">
+                          <span className="w-12 text-neutral-400 shrink-0 font-medium">Snippet:</span>
+                          <span className="italic">{emailData.preview_text}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Email Message Content */}
+                    <div className="p-6 space-y-4">
+                      {/* Internal Email Header */}
+                      <div className="border-b border-neutral-100 pb-4 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="h-6 w-6 rounded-md bg-neutral-900 text-white flex items-center justify-center font-bold text-xs">
+                            R
+                          </div>
+                          <span className="font-bold text-neutral-900 text-xs">Acme SaaS Billing</span>
+                        </div>
+                        <span className="text-[10px] text-neutral-400">
+                          Plan: {emailData.plan_name} • {emailData.amount_formatted}
+                        </span>
+                      </div>
+
+                      <h4 className="text-sm font-bold text-neutral-900 leading-snug">
+                        {emailData.headline}
+                      </h4>
+
+                      <div className="space-y-2.5 text-xs text-neutral-700 leading-relaxed">
+                        {emailData.body_paragraphs?.map((paragraph: string, idx: number) => (
+                          <p key={idx}>{paragraph}</p>
+                        ))}
+                      </div>
+
+                      {/* CTA Button Mockup */}
+                      <div className="pt-2 pb-1">
+                        <button
+                          type="button"
+                          className="px-5 py-2.5 bg-neutral-900 hover:bg-neutral-800 text-white rounded-xl text-xs font-semibold shadow-sm inline-flex items-center gap-2 transition"
+                        >
+                          <Lock className="h-3.5 w-3.5 text-neutral-300" />
+                          <span>{emailData.call_to_action_label}</span>
+                          <ArrowUpRight className="h-3.5 w-3.5 text-neutral-400" />
+                        </button>
+                      </div>
+
+                      {/* Email Footer */}
+                      <div className="border-t border-neutral-100 pt-3 text-[10px] text-neutral-400 flex items-center justify-between">
+                        <span>Encrypted with TLS 1.3 • Tokenized one-time checkout link</span>
+                        <span className="font-mono">Ref: {emailData.plan_name?.toUpperCase()}</span>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              ) : null}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-6 py-3 border-t border-neutral-100 bg-white flex items-center justify-between">
+              <div className="flex items-center gap-2 text-[11px] text-neutral-500">
+                <ShieldCheck className="h-4 w-4 text-emerald-600" />
+                <span>PCI-DSS & RBI Data Sovereignty Compliant</span>
+              </div>
+              <button
+                onClick={() => setEmailDrawerOpen(false)}
+                className="px-4 py-1.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 rounded-lg text-xs font-semibold transition"
+              >
+                Close Preview
+              </button>
             </div>
           </div>
         </div>
