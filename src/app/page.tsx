@@ -62,7 +62,9 @@ const getCustomerIdByCase = (c: string) => {
     case "maya": return "44444444-4444-4444-4444-444444444444";
     case "daniel": return "55555555-5555-5555-5555-555555555555";
     case "clara": return "66666666-6666-6666-6666-666666666666";
-    case "james": return "77777777-7777-7777-7777-777777777777";
+    case "james": return "77777777-7777-7777-7777-888888888888";
+    case "rohan": return "88888888-8888-8888-8888-888888888888";
+    case "anita": return "99999999-9999-9999-9999-999999999999";
     default: return "11111111-1111-1111-1111-111111111111";
   }
 };
@@ -448,11 +450,13 @@ export default function Dashboard() {
               >
                 <option value="alex" className="bg-white text-neutral-800">Alex (Expired Card - Success)</option>
                 <option value="sarah" className="bg-white text-neutral-800">Sarah (3DS Auth Needed - Success)</option>
-                <option value="john" className="bg-white text-neutral-800">John (Low Risk - Policy Blocked)</option>
+                <option value="john" className="bg-white text-neutral-800">John (Policy Blocked)</option>
                 <option value="maya" className="bg-white text-neutral-800">Maya (Multiple Declines - Success)</option>
                 <option value="daniel" className="bg-white text-neutral-800">Daniel (Cancelled Sub - Policy Blocked)</option>
                 <option value="clara" className="bg-white text-neutral-800">Clara (Paused - Medium Risk)</option>
-                <option value="james" className="bg-white text-neutral-800">James (Cancelled - Low/Medium Risk)</option>
+                <option value="james" className="bg-white text-neutral-800">James (Cancelled - Medium Risk)</option>
+                <option value="rohan" className="bg-white text-neutral-800">Rohan (Low Risk - ₹199 Basic)</option>
+                <option value="anita" className="bg-white text-neutral-800">Anita (In Recovery - ₹12,499 Ent)</option>
               </select>
               <button
                 onClick={handleRunSimulation}

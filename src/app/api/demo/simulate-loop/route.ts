@@ -68,6 +68,20 @@ export async function POST(request: Request) {
       failureCode = "card_declined";
       failureMessage = "Card was declined by issuing bank";
       attemptNumber = 1;
+    } else if (selectedCase === "rohan") {
+      customerExternalId = "cus_rohan_505";
+      subscriptionExternalId = "sub_rohan_888";
+      amount = 199.00;
+      failureCode = "processing_error";
+      failureMessage = "Temporary gateway timeout error";
+      attemptNumber = 1;
+    } else if (selectedCase === "anita") {
+      customerExternalId = "cus_anita_606";
+      subscriptionExternalId = "sub_anita_999";
+      amount = 12499.00;
+      failureCode = "authentication_required";
+      failureMessage = "3DS authentication required";
+      attemptNumber = 1;
     }
 
     // 1. Ensure we have seeded data

@@ -62,6 +62,8 @@ export async function seedDemoData(triggerActiveFailures = false) {
   const danielId = "55555555-5555-5555-5555-555555555555";
   const claraId = "66666666-6666-6666-6666-666666666666";
   const jamesId = "77777777-7777-7777-7777-777777777777";
+  const rohanId = "88888888-8888-8888-8888-888888888888";
+  const anitaId = "99999999-9999-9999-9999-999999999999";
 
   const alexSubId = "11111111-1111-1111-1111-222222222222";
   const sarahSubId = "22222222-2222-2222-2222-333333333333";
@@ -70,6 +72,8 @@ export async function seedDemoData(triggerActiveFailures = false) {
   const danielSubId = "55555555-5555-5555-5555-666666666666";
   const claraSubId = "66666666-6666-6666-6666-777777777777";
   const jamesSubId = "77777777-7777-7777-7777-888888888888";
+  const rohanSubId = "88888888-8888-8888-8888-999999999999";
+  const anitaSubId = "99999999-9999-9999-9999-000000000000";
 
   const customers: CustomerSeed[] = [
     { id: alexId, external_id: "cus_alex_123", name: "Alex", email: "alex@example.com", currency: "INR", country: "IN" },
@@ -79,6 +83,8 @@ export async function seedDemoData(triggerActiveFailures = false) {
     { id: danielId, external_id: "cus_daniel_202", name: "Daniel", email: "daniel@example.com", currency: "INR", country: "IN" },
     { id: claraId, external_id: "cus_clara_303", name: "Clara", email: "clara@example.com", currency: "INR", country: "IN" },
     { id: jamesId, external_id: "cus_james_404", name: "James", email: "james@example.com", currency: "INR", country: "IN" },
+    { id: rohanId, external_id: "cus_rohan_505", name: "Rohan", email: "rohan@example.com", currency: "INR", country: "IN" },
+    { id: anitaId, external_id: "cus_anita_606", name: "Anita", email: "anita@example.com", currency: "INR", country: "IN" },
   ];
 
   const now = new Date();
@@ -162,6 +168,28 @@ export async function seedDemoData(triggerActiveFailures = false) {
       billing_interval: "month",
       next_billing_date: now,
     },
+    {
+      id: rohanSubId,
+      customer_id: rohanId,
+      external_id: "sub_rohan_888",
+      plan_name: "Basic",
+      amount: 199.00,
+      currency: "INR",
+      status: "active",
+      billing_interval: "month",
+      next_billing_date: nextMonth,
+    },
+    {
+      id: anitaSubId,
+      customer_id: anitaId,
+      external_id: "sub_anita_999",
+      plan_name: "Enterprise",
+      amount: 12499.00,
+      currency: "INR",
+      status: "active",
+      billing_interval: "month",
+      next_billing_date: nextMonth,
+    },
   ];
 
   console.log("Seeding customers and subscriptions...");
@@ -203,13 +231,10 @@ export async function seedDemoData(triggerActiveFailures = false) {
   // 2. Sarah: 12 successful payments
   addHistoricalPayments(sarahId, sarahSubId, 7999.00, 12);
 
-  // 3. John: 1 failed payment (history: 0 successful, just the 1 failed)
-  // John's history is just 1 failed payment.
-
-  // 4. Maya: 4 consecutive failures
-  // We'll generate the 3 past failures here, the 4th will be the trigger event.
+  // 3. John: 0 successful payments
+  // 4. Maya: 3 past failures
   for (let i = 1; i <= 3; i++) {
-    const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000); // days ago
+    const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
     paymentEvents.push({
       id: randomUUID(),
       customer_id: mayaId,
@@ -227,13 +252,18 @@ export async function seedDemoData(triggerActiveFailures = false) {
     });
   }
 
-  // 5. Daniel: No successful payments, just cancelled subscription
-
+  // 5. Daniel: 0 successful payments
   // 6. Clara: 5 successful payments
   addHistoricalPayments(claraId, claraSubId, 1499.00, 5);
 
   // 7. James: 3 successful payments
   addHistoricalPayments(jamesId, jamesSubId, 999.00, 3);
+
+  // 8. Rohan: 15 successful payments (strong history for low risk)
+  addHistoricalPayments(rohanId, rohanSubId, 199.00, 15);
+
+  // 9. Anita: 10 successful payments
+  addHistoricalPayments(anitaId, anitaSubId, 12499.00, 10);
 
   console.log("Seeding payment events...");
   if (paymentEvents.length > 0) {
@@ -371,11 +401,61 @@ export async function seedDemoData(triggerActiveFailures = false) {
       raw_payload: { seed: true }
     });
     await applySeededRecommendation(jamesRes.workflowId, "no_action");
+
+    // 8. Rohan - LOW RISK profile case
+    const rohanRes = await processPaymentEvent({
+      provider: "razorpay",
+      external_event_id: `evt_seed_fail_rohan_${Date.now()}`,
+      customer_external_id: "cus_rohan_505",
+      subscription_external_id: "sub_rohan_888",
+      amount: 199.00,
+      currency: "INR",
+      status: "failed",
+      failure_code: "processing_error",
+      failure_message: "Temporary gateway timeout",
+      attempt_number: 1,
+      occurred_at: new Date().toISOString(),
+      raw_payload: { seed: true }
+    });
+    await applySeededRecommendation(rohanRes.workflowId, "send_payment_recovery_email");
+    if (rohanRes.riskId) {
+      await db.from("revenue_risks").update({
+        risk_score: 20,
+        risk_level: "low"
+      }).eq("id", rohanRes.riskId);
+    }
+
+    // 9. Anita - IN RECOVERY profile case (Active Recovery in Process)
+    const anitaRes = await processPaymentEvent({
+      provider: "razorpay",
+      external_event_id: `evt_seed_fail_anita_${Date.now()}`,
+      customer_external_id: "cus_anita_606",
+      subscription_external_id: "sub_anita_999",
+      amount: 12499.00,
+      currency: "INR",
+      status: "failed",
+      failure_code: "authentication_required",
+      failure_message: "3DS authentication step required",
+      attempt_number: 1,
+      occurred_at: new Date().toISOString(),
+      raw_payload: { seed: true }
+    });
+    await applySeededRecommendation(anitaRes.workflowId, "send_payment_recovery_email");
+    if (anitaRes.riskId) {
+      await db.from("revenue_risks").update({
+        status: "in_recovery"
+      }).eq("id", anitaRes.riskId);
+    }
+    if (anitaRes.workflowId) {
+      await db.from("recovery_workflows").update({
+        status: "in_recovery"
+      }).eq("id", anitaRes.workflowId);
+    }
   }
 
   console.log("Seeding finished successfully!");
   return {
-    customers: { alexId, sarahId, johnId, mayaId, danielId, claraId, jamesId },
-    subscriptions: { alexSubId, sarahSubId, johnSubId, mayaSubId, danielSubId, claraSubId, jamesSubId },
+    customers: { alexId, sarahId, johnId, mayaId, danielId, claraId, jamesId, rohanId, anitaId },
+    subscriptions: { alexSubId, sarahSubId, johnSubId, mayaSubId, danielSubId, claraSubId, jamesSubId, rohanSubId, anitaSubId },
   };
 }
