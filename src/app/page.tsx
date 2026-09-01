@@ -44,6 +44,8 @@ interface DashboardData {
     recoverableRevenue: number;
     recoveredRevenue: number;
     activeWorkflows: number;
+    recoveredWorkflows?: number;
+    totalWorkflows?: number;
     recoveryRate: number;
   };
   risks: any[];
@@ -759,7 +761,9 @@ export default function Dashboard() {
             ) : (
               <h3 className="text-3xl font-bold mt-2 text-neutral-900">{data?.metrics.recoveryRate}%</h3>
             )}
-            <p className="text-xs text-neutral-400 mt-1">Intervention efficiency score</p>
+            <p className="text-xs text-neutral-500 font-medium mt-1">
+              {data?.metrics.recoveredWorkflows ?? 0} / {data?.metrics.totalWorkflows ?? 0} workflows recovered
+            </p>
           </div>
         </div>
  
@@ -801,16 +805,16 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           
           {/* Risk Level Distribution (BarChart) */}
-          <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6 shadow-xl">
+          <div className="bg-white border border-neutral-200 rounded-2xl p-6 shadow-sm">
             <div className="mb-6">
-              <h3 className="font-semibold text-zinc-200 text-sm uppercase tracking-wider">Risk Level Distribution</h3>
-              <p className="text-xs text-zinc-500 mt-0.5">Active customer accounts grouped by churn risk score level</p>
+              <h3 className="font-semibold text-neutral-800 text-sm uppercase tracking-wider">Risk Level Distribution</h3>
+              <p className="text-xs text-neutral-500 mt-0.5">Active customer accounts grouped by churn risk score level</p>
             </div>
             
             <div className="h-64 relative" role="region" aria-label="Bar chart showing Customer Risk Level distribution">
               {loading ? (
-                <div className="absolute inset-0 flex items-center justify-center text-xs text-zinc-500">
-                  <RefreshCw className="h-8 w-8 animate-spin text-blue-500" />
+                <div className="absolute inset-0 flex items-center justify-center text-xs text-neutral-400">
+                  <RefreshCw className="h-8 w-8 animate-spin text-neutral-500" />
                 </div>
               ) : data && data.riskDistributionData.length > 0 ? (
                 <BarChart 
@@ -821,28 +825,28 @@ export default function Dashboard() {
                   status={loading ? "loading" : "ready"}
                 >
                   <BarXAxis />
-                  <Bar dataKey="value" fill="#3b82f6" />
+                  <Bar dataKey="value" fill="#171717" />
                   <ChartTooltip />
                 </BarChart>
               ) : (
-                <div className="h-full flex items-center justify-center text-xs text-zinc-600">
+                <div className="h-full flex items-center justify-center text-xs text-neutral-400">
                   No risk metrics recorded.
                 </div>
               )}
             </div>
           </div>
- 
+
           {/* Recovery Outcomes (PieChart) */}
-          <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6 shadow-xl">
+          <div className="bg-white border border-neutral-200 rounded-2xl p-6 shadow-sm">
             <div className="mb-6">
-              <h3 className="font-semibold text-zinc-200 text-sm uppercase tracking-wider">Intervention Outcomes</h3>
-              <p className="text-xs text-zinc-500 mt-0.5">Current statuses of triggered automated interventions</p>
+              <h3 className="font-semibold text-neutral-800 text-sm uppercase tracking-wider">Intervention Outcomes</h3>
+              <p className="text-xs text-neutral-500 mt-0.5">Current statuses of triggered automated interventions</p>
             </div>
             
             <div className="h-64 flex justify-center items-center relative" role="region" aria-label="Pie chart showing Recovery Intervention Outcomes">
               {loading ? (
-                <div className="absolute inset-0 flex items-center justify-center text-xs text-zinc-500">
-                  <RefreshCw className="h-8 w-8 animate-spin text-blue-500" />
+                <div className="absolute inset-0 flex items-center justify-center text-xs text-neutral-400">
+                  <RefreshCw className="h-8 w-8 animate-spin text-neutral-500" />
                 </div>
               ) : data && data.recoveryOutcomesData.length > 0 ? (
                 <PieChart 
@@ -862,7 +866,7 @@ export default function Dashboard() {
                   <PieCenter defaultLabel="Total Outcomes" />
                 </PieChart>
               ) : (
-                <div className="h-full flex items-center justify-center text-xs text-zinc-600">
+                <div className="h-full flex items-center justify-center text-xs text-neutral-400">
                   No recovery outcomes tracked.
                 </div>
               )}
@@ -1116,41 +1120,37 @@ export default function Dashboard() {
                 </button>
               </div>
  
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
+              <div className="w-full overflow-hidden">
+                <table className="w-full text-left border-collapse table-auto">
                   <thead>
                     <tr className="border-b border-neutral-100 bg-neutral-50/50 text-xs font-semibold uppercase tracking-wider text-neutral-500">
-                      <th className="px-6 py-3 cursor-pointer select-none hover:text-neutral-900" onClick={() => handleSort("name")}>
+                      <th className="px-4 py-3 cursor-pointer select-none hover:text-neutral-900" onClick={() => handleSort("name")}>
                         Customer {sortBy === "name" && (sortOrder === "asc" ? "▲" : "▼")}
                       </th>
-                      <th className="px-6 py-3">Subscription</th>
-                      <th className="px-6 py-3 text-right cursor-pointer select-none hover:text-neutral-900" onClick={() => handleSort("amount")}>
+                      <th className="px-4 py-3 text-right cursor-pointer select-none hover:text-neutral-900" onClick={() => handleSort("amount")}>
                         Amount at Risk {sortBy === "amount" && (sortOrder === "asc" ? "▲" : "▼")}
                       </th>
-                      <th className="px-6 py-3 text-center cursor-pointer select-none hover:text-neutral-900" onClick={() => handleSort("score")}>
+                      <th className="px-4 py-3 text-center cursor-pointer select-none hover:text-neutral-900" onClick={() => handleSort("score")}>
                         Risk {sortBy === "score" && (sortOrder === "asc" ? "▲" : "▼")}
                       </th>
-                      <th className="px-6 py-3">AI Recommendation</th>
-                      <th className="px-6 py-3 text-center">Status</th>
-                      <th className="px-6 py-3"></th>
+                      <th className="px-4 py-3">AI Action</th>
+                      <th className="px-4 py-3 text-right">Status</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-neutral-100 text-xs">
                     {loading ? (
                       [1, 2, 3].map((i) => (
                         <tr key={i} className="animate-pulse">
-                          <td className="px-6 py-4"><div className="h-4 bg-neutral-100 rounded w-24"></div></td>
-                          <td className="px-6 py-4"><div className="h-4 bg-neutral-100 rounded w-16"></div></td>
-                          <td className="px-6 py-4 text-right"><div className="h-4 bg-neutral-100 rounded w-12 ml-auto"></div></td>
-                          <td className="px-6 py-4 text-center"><div className="h-4 bg-neutral-100 rounded w-10 mx-auto"></div></td>
-                          <td className="px-6 py-4"><div className="h-4 bg-neutral-100 rounded w-32"></div></td>
-                          <td className="px-6 py-4 text-center"><div className="h-4 bg-neutral-100 rounded w-14 mx-auto"></div></td>
-                          <td className="px-6 py-4"></td>
+                          <td className="px-4 py-4"><div className="h-4 bg-neutral-100 rounded w-28"></div></td>
+                          <td className="px-4 py-4 text-right"><div className="h-4 bg-neutral-100 rounded w-14 ml-auto"></div></td>
+                          <td className="px-4 py-4 text-center"><div className="h-4 bg-neutral-100 rounded w-12 mx-auto"></div></td>
+                          <td className="px-4 py-4"><div className="h-4 bg-neutral-100 rounded w-24"></div></td>
+                          <td className="px-4 py-4 text-right"><div className="h-4 bg-neutral-100 rounded w-16 ml-auto"></div></td>
                         </tr>
                       ))
                     ) : filteredRisks.length === 0 ? (
                       <tr>
-                        <td colSpan={7} className="px-6 py-12 text-center text-neutral-400 font-medium">
+                        <td colSpan={5} className="px-4 py-12 text-center text-neutral-400 font-medium">
                           No matching revenue risks found. Click "Run Recovery Demo" to trigger a simulation.
                         </td>
                       </tr>
@@ -1159,73 +1159,81 @@ export default function Dashboard() {
                         <tr
                           key={risk.id}
                           onClick={() => setSelectedRisk(risk)}
-                          className="hover:bg-neutral-50/50 cursor-pointer transition group border-b border-neutral-100 last:border-b-0"
+                          className="hover:bg-neutral-50/60 cursor-pointer transition group border-b border-neutral-100 last:border-b-0"
                         >
-                          <td className="px-6 py-4">
-                            <div className="flex items-center gap-3">
-                              <div className="bg-neutral-100 h-8 w-8 rounded-full flex items-center justify-center text-neutral-500 border border-neutral-200/50">
-                                <User className="h-4 w-4" />
+                          <td className="px-4 py-3.5">
+                            <div className="flex items-center gap-2.5">
+                              <div className="bg-neutral-100 h-7 w-7 rounded-full flex items-center justify-center text-neutral-500 border border-neutral-200/50 shrink-0">
+                                <User className="h-3.5 w-3.5" />
                               </div>
-                              <div>
-                                <h4 className="font-semibold text-neutral-800 group-hover:text-neutral-900 transition">
+                              <div className="min-w-0">
+                                <h4 className="font-semibold text-neutral-900 group-hover:text-neutral-900 transition truncate">
                                   {risk.customer?.name}
                                 </h4>
-                                <p className="text-[10px] text-neutral-500 mt-0.5">{risk.customer?.email}</p>
+                                <p className="text-[10px] text-neutral-500 truncate">
+                                  {risk.subscription?.plan_name} Plan • {risk.payment_event?.failure_code?.replace(/_/g, " ") || "failed"}
+                                </p>
                               </div>
                             </div>
                           </td>
-                          <td className="px-6 py-4">
-                            <div className="text-neutral-700 font-medium">{risk.subscription?.plan_name}</div>
-                            <div className="text-[10px] text-neutral-400 capitalize mt-0.5">{risk.payment_event?.failure_code?.replace(/_/g, " ")}</div>
-                          </td>
-                          <td className="px-6 py-4 text-right font-mono font-semibold text-neutral-800">
+                          <td className="px-4 py-3.5 text-right font-mono font-semibold text-neutral-900 whitespace-nowrap">
                             {formatINR(risk.amount_at_risk)}
                           </td>
-                          <td className="px-6 py-4 text-center">
+                          <td className="px-4 py-3.5 text-center whitespace-nowrap">
                             <span
-                              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold whitespace-nowrap uppercase tracking-wider ${
+                              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
                                 risk.risk_level === "critical"
                                   ? "bg-rose-50 text-rose-700 border border-rose-200"
                                   : risk.risk_level === "high"
                                   ? "bg-amber-50 text-amber-700 border border-amber-200"
-                                  : "bg-neutral-50 text-neutral-700 border border-neutral-200"
+                                  : risk.risk_level === "medium"
+                                  ? "bg-amber-50/70 text-amber-800 border border-amber-200"
+                                  : "bg-emerald-50 text-emerald-700 border border-emerald-200"
                               }`}
                             >
                               <AlertTriangle className="h-3 w-3 shrink-0" />
                               {risk.risk_score} - {risk.risk_level}
                             </span>
                           </td>
-                          <td className="px-6 py-4 text-neutral-700">
-                            {risk.workflows?.[0]?.recommended_action || "Pending AI recommendations..."}
-                          </td>
-                          <td className="px-6 py-4 text-center">
-                            <span
-                              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border ${
-                                risk.status === "recovered"
-                                  ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                                  : "bg-neutral-50 text-neutral-700 border border-neutral-200"
-                              }`}
-                            >
-                              {risk.status === "recovered" ? (
-                                <>
-                                  <Check className="h-3 w-3 shrink-0 text-emerald-600" />
-                                  <span>Recovered</span>
-                                </>
-                              ) : risk.status === "in_recovery" ? (
-                                <>
-                                  <Mail className="h-3 w-3 shrink-0 text-neutral-600" />
-                                  <span>Email Sent</span>
-                                </>
-                              ) : (
-                                <>
-                                  <Info className="h-3 w-3 shrink-0 text-neutral-500" />
-                                  <span className="capitalize">{risk.status}</span>
-                                </>
-                              )}
+                          <td className="px-4 py-3.5 text-neutral-700 whitespace-nowrap">
+                            <span className="text-[11px] font-medium text-neutral-800 bg-neutral-100 border border-neutral-200/60 px-2 py-0.5 rounded">
+                              {risk.workflows?.[0]?.recommended_action === "send_payment_recovery_email"
+                                ? "Send Recovery Email"
+                                : risk.workflows?.[0]?.recommended_action === "no_action"
+                                ? "No Action"
+                                : "Pending AI"}
                             </span>
                           </td>
-                          <td className="px-6 py-4 text-right">
-                            <ChevronRight className="h-4 w-4 text-neutral-400 group-hover:text-neutral-600 group-hover:translate-x-0.5 transition" />
+                          <td className="px-4 py-3.5 text-right whitespace-nowrap">
+                            <div className="inline-flex items-center gap-2">
+                              <span
+                                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                                  risk.status === "recovered"
+                                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                    : risk.status === "in_recovery"
+                                    ? "bg-purple-50 text-purple-700 border-purple-200"
+                                    : "bg-neutral-50 text-neutral-700 border-neutral-200"
+                                }`}
+                              >
+                                {risk.status === "recovered" ? (
+                                  <>
+                                    <Check className="h-3 w-3 shrink-0 text-emerald-600" />
+                                    <span>Recovered</span>
+                                  </>
+                                ) : risk.status === "in_recovery" ? (
+                                  <>
+                                    <Mail className="h-3 w-3 shrink-0 text-purple-600" />
+                                    <span>In Recovery</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Info className="h-3 w-3 shrink-0 text-neutral-500" />
+                                    <span className="capitalize">{risk.status}</span>
+                                  </>
+                                )}
+                              </span>
+                              <ChevronRight className="h-4 w-4 text-neutral-400 group-hover:text-neutral-600 group-hover:translate-x-0.5 transition shrink-0" />
+                            </div>
                           </td>
                         </tr>
                       ))

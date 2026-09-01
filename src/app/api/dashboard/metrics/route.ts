@@ -173,6 +173,9 @@ export async function GET() {
       { name: "Failed", value: outcomeGroups.failed, color: "#ef4444" },
     ];
 
+    const recoveredWorkflowsCount = risks.filter((r: any) => r.status === "recovered").length;
+    const totalWorkflowsCount = risks.length;
+
     return NextResponse.json({
       success: true,
       data: {
@@ -181,6 +184,8 @@ export async function GET() {
           recoverableRevenue: Math.round(recoverableRevenue),
           recoveredRevenue,
           activeWorkflows: activeWorkflowsCount,
+          recoveredWorkflows: recoveredWorkflowsCount,
+          totalWorkflows: totalWorkflowsCount,
           recoveryRate: Math.round(recoveryRate * 10) / 10,
         },
         risks,

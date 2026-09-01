@@ -300,7 +300,7 @@ export async function seedDemoData(triggerActiveFailures = false) {
     });
     await applySeededRecommendation(alexRes.workflowId, "send_payment_recovery_email");
 
-    // 2. Sarah - Authentication Required
+    // 2. Sarah - Authentication Required (Pre-seeded as Recovered Baseline)
     const sarahRes = await processPaymentEvent({
       provider: "razorpay",
       external_event_id: `evt_seed_fail_sarah_${Date.now()}`,
@@ -316,6 +316,17 @@ export async function seedDemoData(triggerActiveFailures = false) {
       raw_payload: { seed: true }
     });
     await applySeededRecommendation(sarahRes.workflowId, "send_payment_recovery_email");
+    if (sarahRes.riskId) {
+      await db.from("revenue_risks").update({
+        status: "recovered"
+      }).eq("id", sarahRes.riskId);
+    }
+    if (sarahRes.workflowId) {
+      await db.from("recovery_workflows").update({
+        status: "completed",
+        completed_at: new Date().toISOString()
+      }).eq("id", sarahRes.workflowId);
+    }
 
     // 3. John - Insufficient Funds
     const johnRes = await processPaymentEvent({
