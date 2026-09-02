@@ -854,7 +854,26 @@ export default function Dashboard() {
 
               {/* Interaction details */}
               <div className="lg:col-span-2 bg-neutral-50 border border-neutral-200 rounded-xl p-5 flex flex-col items-center justify-center text-center">
-                {demoStep < 7 ? (
+                {simulating || demoStep < 5 ? (
+                  <div className="py-6 flex flex-col items-center justify-center text-center space-y-3 w-full">
+                    <div className="h-12 w-12 rounded-2xl bg-neutral-900 text-amber-400 flex items-center justify-center border border-neutral-800 shadow-sm">
+                      <RefreshCw className="h-6 w-6 animate-spin" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-neutral-900 text-sm">AI Recovery Engine Executing...</h4>
+                      <p className="text-xs text-neutral-500 mt-1 max-w-xs leading-relaxed">
+                        Normalizing decline codes, scoring churn risk, and querying local LLM agent in real-time.
+                      </p>
+                    </div>
+                    <div className="w-full bg-neutral-200/80 h-1.5 rounded-full overflow-hidden mt-2">
+                      <div
+                        className="bg-neutral-900 h-full transition-all duration-500 ease-out"
+                        style={{ width: `${Math.min(100, (demoStep / 5) * 100)}%` }}
+                      ></div>
+                    </div>
+                    <span className="text-[10px] font-mono text-neutral-400">Step {demoStep} of 5 in progress...</span>
+                  </div>
+                ) : demoStep < 7 ? (
                   <>
                     <Mail className="h-10 w-10 text-neutral-700 mb-3 animate-bounce" />
                     <h4 className="font-semibold text-neutral-800 text-sm">Customer Action Required</h4>
@@ -871,20 +890,24 @@ export default function Dashboard() {
                       Open Checkout Portal
                       <ArrowUpRight className="h-3.5 w-3.5" />
                     </a>
-                    <button
-                      onClick={() => handleOpenEmailPreview(currentWorkflowId)}
-                      className="mt-2 w-full py-2 bg-white hover:bg-neutral-100 text-neutral-800 border border-neutral-300 rounded-lg text-xs font-semibold transition inline-flex items-center justify-center gap-1.5 shadow-sm"
-                    >
-                      <Sparkles className="h-3.5 w-3.5 text-amber-600" />
-                      Preview AI-Generated Email Copy
-                    </button>
-                    <button
-                      onClick={() => handleOpenAgentChat(currentWorkflowId, getCaseLabel(selectedCase), "Plan")}
-                      className="mt-1.5 w-full py-2 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300/70 rounded-lg text-xs font-semibold transition inline-flex items-center justify-center gap-1.5 shadow-sm"
-                    >
-                      <Bot className="h-3.5 w-3.5 text-amber-700" />
-                      Ask AI Billing Agent
-                    </button>
+                    {currentWorkflowId && (
+                      <>
+                        <button
+                          onClick={() => handleOpenEmailPreview(currentWorkflowId)}
+                          className="mt-2 w-full py-2 bg-white hover:bg-neutral-100 text-neutral-800 border border-neutral-300 rounded-lg text-xs font-semibold transition inline-flex items-center justify-center gap-1.5 shadow-sm"
+                        >
+                          <Sparkles className="h-3.5 w-3.5 text-amber-600" />
+                          Preview AI-Generated Email Copy
+                        </button>
+                        <button
+                          onClick={() => handleOpenAgentChat(currentWorkflowId, getCaseLabel(selectedCase), "Plan")}
+                          className="mt-1.5 w-full py-2 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300/70 rounded-lg text-xs font-semibold transition inline-flex items-center justify-center gap-1.5 shadow-sm"
+                        >
+                          <Bot className="h-3.5 w-3.5 text-amber-700" />
+                          Ask AI Billing Agent
+                        </button>
+                      </>
+                    )}
                   </>
                 ) : (
                   <>
