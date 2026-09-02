@@ -1,5 +1,5 @@
 import { vi, describe, it, expect, beforeAll, afterEach } from "vitest";
-import { runAiAnalysis } from "@/lib/ai/recovery-agent";
+import { runAiAnalysis, chatWithBillingAgent } from "@/lib/ai/recovery-agent";
 import { processPaymentEvent } from "@/lib/recovery/process-payment-event";
 import { seedDemoData } from "@/lib/demo/demo-data";
 import { getDbClient } from "@/lib/db/client";
@@ -148,4 +148,37 @@ describe("AI Recovery Agent Integration Tests", () => {
 
     expect(fetchSpy).toHaveBeenCalled();
   });
+
+  it("should generate grounded chat reply from chatWithBillingAgent", async () => {
+    const originalFetch = global.fetch;
+    const fetchSpy = vi.spyOn(global, "fetch").mockImplementation(async (url, options) => {
+      const urlStr = typeof url === "string" ? url : (url as any).url || "";
+      if (urlStr.includes("11434") || urlStr.includes("api.openai.com")) {
+        return {
+          ok: true,
+          json: async () => ({
+            choices: [
+              {
+                message: {
+                  content: "Automated recovery was approved per policy guardrails.",
+                },
+              },
+            ],
+          }),
+        } as Response;
+      }
+      return originalFetch(url, options);
+    });
+
+    const result = await chatWithBillingAgent({
+      workflowId: testWorkflowId,
+      messages: [{ role: "user", content: "Why was this recovery approved or blocked by policy?" }],
+    });
+
+    expect(result).toBeDefined();
+    expect(result.reply).toBeTruthy();
+    expect(result.model_used).toBeTruthy();
+    expect(fetchSpy).toHaveBeenCalled();
+  });
 });
+

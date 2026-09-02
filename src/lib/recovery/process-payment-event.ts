@@ -73,6 +73,8 @@ export async function processPaymentEvent(payload: unknown): Promise<ProcessEven
     .from("customers")
     .select("*")
     .eq("external_id", validated.customer_external_id)
+    .order("created_at", { ascending: false })
+    .limit(1)
     .maybeSingle();
 
   if (customerError) {
@@ -125,6 +127,8 @@ export async function processPaymentEvent(payload: unknown): Promise<ProcessEven
       .from("subscriptions")
       .select("*")
       .eq("external_id", validated.subscription_external_id)
+      .order("created_at", { ascending: false })
+      .limit(1)
       .maybeSingle();
 
     if (subError) {
