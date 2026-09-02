@@ -48,7 +48,7 @@ function sanitizeUntrustedInput(input: string | null | undefined): string {
 /**
  * Invokes the configured LLM API (local Ollama or OpenAI).
  */
-async function callLLM(messages: LLMMessage[]): Promise<string> {
+async function callLLM(messages: LLMMessage[], responseFormatJson: boolean = true): Promise<string> {
   const provider = process.env.LLM_PROVIDER || "local";
   const model = provider === "local"
     ? process.env.LOCAL_LLM_MODEL || "qwen3.5:9b"
@@ -71,19 +71,24 @@ async function callLLM(messages: LLMMessage[]): Promise<string> {
   }
 
   const controller = new AbortController();
-  const timeoutLimit = Number(process.env.LOCAL_LLM_TIMEOUT) || 120000;
+  const timeoutLimit = Number(process.env.LOCAL_LLM_TIMEOUT) || 45000;
   const timeoutId = setTimeout(() => controller.abort(), timeoutLimit);
 
   try {
+    const reqBody: any = {
+      model,
+      messages,
+      temperature: responseFormatJson ? 0.0 : 0.7,
+    };
+
+    if (responseFormatJson) {
+      reqBody.response_format = { type: "json_object" };
+    }
+
     const response = await fetch(url, {
       method: "POST",
       headers,
-      body: JSON.stringify({
-        model,
-        messages,
-        response_format: { type: "json_object" },
-        temperature: 0.0, // Low temperature for deterministic output structure
-      }),
+      body: JSON.stringify(reqBody),
       signal: controller.signal,
     });
 
@@ -101,7 +106,7 @@ async function callLLM(messages: LLMMessage[]): Promise<string> {
     return content;
   } catch (err: any) {
     if (err.name === "AbortError" || err.message?.includes("aborted") || err.message?.includes("abort")) {
-      throw new Error("Ollama timed out while loading the qwen3.5:9b model into memory. Please retry now that Ollama has loaded the model.");
+      throw new Error("Ollama timed out while loading the model into memory. Please retry now that Ollama has loaded the model.");
     }
     throw err;
   } finally {
@@ -960,10 +965,11 @@ Context Dossier:
 - Action Authorization Status: ${actionStatus}
 - Recommended Action: ${workflow.recommended_action || "send_payment_recovery_email"}
 
-Instructions:
-1. Provide concise, clear, and expert billing advice.
-2. Format key points using markdown bolding and bullet points.
-3. Keep responses helpful, grounded strictly in the customer's dossier, and focused on revenue recovery and churn prevention.`;
+CRITICAL OUTPUT REQUIREMENTS:
+1. Speak strictly in warm, clear, professional, plain English.
+2. Use standard markdown formatting (bold text, bullet points).
+3. Do NOT output raw JSON objects, key-value syntax, curly braces {}, or code blocks.
+4. Directly answer the user's question with actionable insights grounded in the customer's billing dossier.`;
 
   const fullMessages: LLMMessage[] = [
     { role: "system", content: systemPrompt },
@@ -973,9 +979,26 @@ Instructions:
   const lastUserMessage = messages.filter((m) => m.role === "user").pop()?.content || "";
 
   try {
-    const rawReply = await callLLM(fullMessages);
+    const rawReply = await callLLM(fullMessages, false);
+    let replyText = rawReply.trim();
+
+    // Safety fallback: If model outputs a raw JSON string despite instructions, format it cleanly into natural markdown text!
+    if (replyText.startsWith("{") && replyText.endsWith("}")) {
+      try {
+        const parsed = JSON.parse(replyText);
+        const lines: string[] = [];
+        for (const [key, val] of Object.entries(parsed)) {
+          const formattedKey = key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+          lines.push(`• **${formattedKey}**: ${typeof val === "object" ? JSON.stringify(val) : val}`);
+        }
+        replyText = lines.join("\n");
+      } catch (e) {
+        // Keep raw text if not valid JSON
+      }
+    }
+
     return {
-      reply: rawReply.trim(),
+      reply: replyText,
       model_used: process.env.LOCAL_LLM_MODEL || "Qwen 3.5 9B (Local)",
     };
   } catch (err: any) {

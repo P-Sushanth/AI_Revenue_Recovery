@@ -1,5 +1,5 @@
 "use client";
- 
+
 import { useEffect, useState, useRef } from "react";
 import {
   AlertTriangle,
@@ -27,7 +27,7 @@ import {
   MessageSquare,
   Bot,
 } from "lucide-react";
- 
+
 // Bklit UI components
 import { LineChart } from "@/components/charts/line-chart";
 import { Line } from "@/components/charts/line";
@@ -40,7 +40,7 @@ import { BarXAxis } from "@/components/charts/bar-x-axis";
 import { PieChart } from "@/components/charts/pie-chart";
 import { PieSlice } from "@/components/charts/pie-slice";
 import { PieCenter } from "@/components/charts/pie-center";
- 
+
 interface DashboardData {
   metrics: {
     revenueAtRisk: number;
@@ -58,7 +58,7 @@ interface DashboardData {
   riskDistributionData: { name: string; value: number }[];
   recoveryOutcomesData: { name: string; value: number; color?: string }[];
 }
- 
+
 const getCustomerIdByCase = (c: string) => {
   switch (c) {
     case "alex": return "11111111-1111-1111-1111-111111111111";
@@ -78,24 +78,24 @@ export default function Dashboard() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
- 
+
   // Table search & filters
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [riskFilter, setRiskFilter] = useState("all");
   const [sortBy, setSortBy] = useState<"name" | "amount" | "score" | null>(null);
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
- 
+
   // Selected Risk drawer
   const [selectedRisk, setSelectedRisk] = useState<any | null>(null);
   const [recoveringId, setRecoveringId] = useState<string | null>(null);
- 
+
   // Seeding and Decline Simulation state
   const [seeding, setSeeding] = useState(false);
   const [simulating, setSimulating] = useState(false);
   const [simulationLogs, setSimulationLogs] = useState<string[]>([]);
   const logEndRef = useRef<HTMLDivElement>(null);
- 
+
   // Guided Demo wizard timeline states
   const [demoStep, setDemoStep] = useState(0);
   const [currentWorkflowId, setCurrentWorkflowId] = useState<string | null>(null);
@@ -153,7 +153,7 @@ export default function Dashboard() {
 
   const handleOpenEmailPreview = async (workflowId?: string | null) => {
     let targetId = workflowId || currentWorkflowId;
-    
+
     // If no workflow ID provided, fallback to first active workflow in table
     if (!targetId && data?.risks && data.risks.length > 0) {
       targetId = (data.risks[0] as any)?.workflows?.[0]?.id || null;
@@ -201,7 +201,7 @@ export default function Dashboard() {
 
   const handleOpenAgentChat = async (workflowId?: string | null, customerName?: string, planName?: string) => {
     let targetId = workflowId || currentWorkflowId;
-    
+
     if (!targetId && data?.risks && data.risks.length > 0) {
       const firstRisk = data.risks[0] as any;
       targetId = firstRisk?.workflows?.[0]?.id || null;
@@ -214,13 +214,16 @@ export default function Dashboard() {
       return;
     }
 
+    const cleanCustomerName = (customerName || "Customer").split("(")[0].trim();
+    const cleanPlanName = (planName || "Pro").split("(")[0].trim();
+
     setChatWorkflowId(targetId);
-    setChatCustomerName(customerName || "Customer");
-    setChatPlanName(planName || "Pro");
+    setChatCustomerName(cleanCustomerName || "Customer");
+    setChatPlanName(cleanPlanName || "Pro");
     setChatDrawerOpen(true);
 
     if (chatMessages.length === 0) {
-      const greeting = `Hello! I am your **RecoverAI Billing & Retention Strategist**. I have loaded the full intelligence dossier for **${customerName || "this customer"}** (${planName || "Pro"} plan).\n\nHow can I help you optimize this recovery or evaluate policy constraints today?`;
+      const greeting = `Hello! I am your **RecoverAI Billing & Retention Strategist**. I have loaded the full intelligence dossier for **${cleanCustomerName}** (${cleanPlanName} plan).\n\nHow can I help you optimize this recovery or evaluate policy constraints today?`;
       setChatMessages([{ role: "assistant", content: greeting }]);
     }
   };
@@ -283,7 +286,7 @@ export default function Dashboard() {
       setCheckingHealth(false);
     }
   };
- 
+
   const fetchData = async (showLoading = true) => {
     if (showLoading) setLoading(true);
     try {
@@ -301,23 +304,23 @@ export default function Dashboard() {
       if (showLoading) setLoading(false);
     }
   };
- 
+
   useEffect(() => {
     fetchData();
     checkSystemHealth();
   }, []);
- 
+
   // Auto-scroll simulation logs
   useEffect(() => {
     if (logEndRef.current) {
       logEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [simulationLogs]);
- 
+
   // Polling for simulation recovery success
   useEffect(() => {
     let intervalId: NodeJS.Timeout | null = null;
- 
+
     if (demoStep === 5 || demoStep === 6) {
       intervalId = setInterval(async () => {
         try {
@@ -325,12 +328,12 @@ export default function Dashboard() {
           const result = await response.json();
           if (result.success) {
             setData(result.data);
-            
+
             // Check if the current workflow is resolved
             const currentWorkflow = result.data.risks.find(
               (r: any) => r.workflows?.[0]?.id === currentWorkflowId
             );
-            
+
             if (currentWorkflow && currentWorkflow.status === "recovered") {
               setDemoStep(7); // Transition to success step
               if (intervalId) clearInterval(intervalId);
@@ -341,12 +344,12 @@ export default function Dashboard() {
         }
       }, 2000);
     }
- 
+
     return () => {
       if (intervalId) clearInterval(intervalId);
     };
   }, [demoStep, currentWorkflowId]);
- 
+
   // Handle Seeding
   const handleSeedDatabase = async () => {
     setSeeding(true);
@@ -369,7 +372,7 @@ export default function Dashboard() {
       setSeeding(false);
     }
   };
- 
+
   const getCaseLabel = (c: string) => {
     switch (c) {
       case "alex": return "Alex (Pro Plan ₹2499, Expired Card)";
@@ -390,7 +393,7 @@ export default function Dashboard() {
     setAiUnavailable(false);
     setPolicyRejected(false);
     setSimulationLogs(["Initializing billing decline event trigger...", `Customer profile: ${getCaseLabel(selectedCase)}`]);
- 
+
     try {
       // Step 1: Normalization
       await new Promise((resolve) => setTimeout(resolve, 800));
@@ -408,7 +411,7 @@ export default function Dashboard() {
       };
       const code = codeMap[selectedCase] || "expired_card";
       setSimulationLogs(prev => [...prev, `✓ Normalized Razorpay decline payload (${code})`, "Inserting risk analysis into database..."]);
- 
+
       // Step 2: Risk Scoring
       await new Promise((resolve) => setTimeout(resolve, 800));
       setDemoStep(3);
@@ -426,17 +429,23 @@ export default function Dashboard() {
       const score = scoreMap[selectedCase]?.score || "55/100 (HIGH)";
       const index = scoreMap[selectedCase]?.index || "85/100 (HIGH)";
       setSimulationLogs(prev => [...prev, `✓ Risk score calculated: ${score}`, `✓ Recoverability index: ${index}`, "Workflow registered: STATUS PENDING"]);
- 
+
       // Step 3: LLM / Heuristic Analysis (Calls /api/demo/simulate-loop)
       setSimulationLogs(prev => [
-        ...prev, 
-        isHostedDemo 
-          ? "Invocating Autonomous AI Agent Diagnosis (Cloud Mode)..." 
+        ...prev,
+        isHostedDemo
+          ? "Invocating Autonomous AI Agent Diagnosis (Cloud Mode)..."
           : "Invocating local Ollama Qwen model... (Please wait)"
       ]);
-      
+
       const res = await fetch(`/api/demo/simulate-loop?case=${selectedCase}`, { method: "POST" });
-      const result = await res.json();
+      let result: any = null;
+      try {
+        const text = await res.text();
+        result = text ? JSON.parse(text) : {};
+      } catch (e) {
+        throw new Error(`Server returned invalid response (Status ${res.status}). Local Ollama may have timed out loading the model into memory. Please retry.`);
+      }
 
       if (result.success) {
         const step3 = result.step_3_local_ai_agent || {};
@@ -448,29 +457,29 @@ export default function Dashboard() {
           `✓ AI Recommendation: ${step3.recommended_action || "send_payment_recovery_email"} (Urgency: ${step3.urgency || "medium"})`,
           `✓ Policy Engine checked: ${step4.policy_allowed ? "ACTION AUTHORIZED" : "ACTION BLOCKED"}`,
           `✓ Action outcome: ${step4.action_executed || "None"} (${step4.action_status || "n/a"})`,
-          step4.policy_allowed 
-            ? `✓ Email dispatched: CTA link encrypted server-side` 
+          step4.policy_allowed
+            ? `✓ Email dispatched: CTA link encrypted server-side`
             : `ℹ Policy guardrail active: ${step4.execution_summary || "Intervention blocked per policy"}`,
           `✓ Workflow registered: ID ${step3.workflow_id || "active"}`
         ]);
-        
+
         if (step3.workflow_id) {
           setCurrentWorkflowId(step3.workflow_id);
         }
-        
+
         if (step4.action_status === "rejected" || !step4.policy_allowed) {
           setPolicyRejected(true);
           setDemoStep(4);
         } else {
           setDemoStep(5); // Transition to waiting for customer recovery
         }
-        
+
         await fetchData(false);
       } else {
         const errorMsg = result.error?.message || result.message || "An unexpected error occurred.";
-        const isOffline = 
-          errorMsg.toLowerCase().includes("ollama") || 
-          errorMsg.toLowerCase().includes("fetch failed") || 
+        const isOffline =
+          errorMsg.toLowerCase().includes("ollama") ||
+          errorMsg.toLowerCase().includes("fetch failed") ||
           errorMsg.toLowerCase().includes("econnrefused");
 
         if (isOffline) {
@@ -488,7 +497,7 @@ export default function Dashboard() {
       setSimulating(false);
     }
   };
- 
+
   // Simulate Customer recovering invoice (clicking update and paying)
   const handleSimulateRecovery = async (workflowId: string) => {
     if (!workflowId) return;
@@ -513,7 +522,7 @@ export default function Dashboard() {
       setRecoveringId(null);
     }
   };
- 
+
   // Format currency
   const formatINR = (val: number) => {
     return new Intl.NumberFormat("en-IN", {
@@ -522,7 +531,7 @@ export default function Dashboard() {
       maximumFractionDigits: 0,
     }).format(val);
   };
- 
+
   // Sorting handler
   const handleSort = (field: "name" | "amount" | "score") => {
     if (sortBy === field) {
@@ -532,7 +541,7 @@ export default function Dashboard() {
       setSortOrder("desc");
     }
   };
- 
+
   // Filtering and Sorting logic
   let filteredRisks = data?.risks.filter(risk => {
     const nameMatch = risk.customer?.name?.toLowerCase().includes(searchQuery.toLowerCase());
@@ -541,7 +550,7 @@ export default function Dashboard() {
     const levelMatch = riskFilter === "all" || risk.risk_level === riskFilter;
     return (nameMatch || emailMatch) && statusMatch && levelMatch;
   }) || [];
- 
+
   if (sortBy) {
     filteredRisks = [...filteredRisks].sort((a, b) => {
       let valA: any = 0;
@@ -556,9 +565,9 @@ export default function Dashboard() {
         valA = a.customer?.name || "";
         valB = b.customer?.name || "";
       }
-      
+
       if (typeof valA === "string") {
-        return sortOrder === "asc" 
+        return sortOrder === "asc"
           ? valA.localeCompare(valB)
           : valB.localeCompare(valA);
       } else {
@@ -566,10 +575,10 @@ export default function Dashboard() {
       }
     });
   }
- 
+
   return (
     <div className="min-h-screen bg-[#F7F2EC] text-neutral-900 font-sans selection:bg-[#E2D4C5] selection:text-neutral-900 pb-16">
-      
+
       {/* Header */}
       <header className="border-b border-neutral-200 bg-white/80 backdrop-blur-md sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-6 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
@@ -584,7 +593,7 @@ export default function Dashboard() {
               <p className="text-xs text-neutral-500">Autonomous Billing Intervention & Risk Management</p>
             </div>
           </div>
- 
+
           <div className="flex items-center gap-3">
             <button
               onClick={handleSeedDatabase}
@@ -595,7 +604,7 @@ export default function Dashboard() {
               <Database className="h-4 w-4" />
               {seeding ? "Resetting..." : "Reset Seeds"}
             </button>
- 
+
             <div className="flex items-center bg-white border border-neutral-200 rounded-lg p-1">
               <select
                 value={selectedCase}
@@ -627,7 +636,7 @@ export default function Dashboard() {
           </div>
         </div>
       </header>
- 
+
       {/* Main Container */}
       <main className="max-w-7xl mx-auto px-6 mt-8 space-y-8">
         {/* Hosted Demo Mode Notice for visitors who don't clone the repo */}
@@ -657,7 +666,7 @@ export default function Dashboard() {
             <div className="flex-1">
               <h4 className="font-bold text-rose-800">AI Service Reachability Error</h4>
               <p className="text-sm text-neutral-600 mt-1 leading-relaxed">
-                Could not connect to the local Ollama API on <strong className="text-neutral-800">http://localhost:11434</strong>. 
+                Could not connect to the local Ollama API on <strong className="text-neutral-800">http://localhost:11434</strong>.
                 Please start Ollama locally before running the simulation.
               </p>
               <button
@@ -677,7 +686,7 @@ export default function Dashboard() {
             <div className="flex-1">
               <h4 className="font-bold text-amber-800">AI Model Unavailable</h4>
               <p className="text-sm text-neutral-600 mt-1 leading-relaxed">
-                Ollama is reachable, but the model <strong className="text-neutral-800">{targetModel}</strong> was not found. 
+                Ollama is reachable, but the model <strong className="text-neutral-800">{targetModel}</strong> was not found.
                 Please run <code className="font-mono text-neutral-800 bg-neutral-100 px-1 py-0.5 rounded border border-neutral-200">ollama pull {targetModel}</code> inside your command prompt to install it.
               </p>
               <button
@@ -698,7 +707,7 @@ export default function Dashboard() {
             <div>
               <h4 className="font-bold text-rose-800">AI Diagnosis Failed</h4>
               <p className="text-sm text-neutral-600 mt-1 leading-relaxed">
-                The local AI agent returned an error or timed out during the simulation run. 
+                The local AI agent returned an error or timed out during the simulation run.
                 Please verify that your Ollama server is running and responsive.
               </p>
             </div>
@@ -711,7 +720,7 @@ export default function Dashboard() {
             <div>
               <h4 className="font-bold text-amber-800">Recovery Not Approved</h4>
               <p className="text-sm text-neutral-600 mt-1 leading-relaxed">
-                The customer did not meet the recovery policy requirements (e.g., restricted country codes or inclusion bounds). 
+                The customer did not meet the recovery policy requirements (e.g., restricted country codes or inclusion bounds).
                 No action was executed.
               </p>
             </div>
@@ -727,76 +736,70 @@ export default function Dashboard() {
                 <span className="h-2 w-2 rounded-full bg-neutral-900 animate-pulse"></span>
                 <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-500">Live Demo Recovery Journey</h3>
               </div>
-              <button 
+              <button
                 onClick={() => { setDemoStep(0); setSimulationLogs([]); }}
                 className="text-neutral-400 hover:text-neutral-700 transition text-xs"
               >
                 Clear Demo Run
               </button>
             </div>
-            
+
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
               {/* Checklist details */}
               <div className="lg:col-span-3 space-y-4">
                 <div className="flex items-center gap-3">
-                  <div className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                    demoStep >= 1 ? "bg-emerald-50 text-emerald-600 border border-emerald-200" : "bg-neutral-100 text-neutral-400 border border-neutral-200"
-                  }`}>
+                  <div className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold ${demoStep >= 1 ? "bg-emerald-50 text-emerald-600 border border-emerald-200" : "bg-neutral-100 text-neutral-400 border border-neutral-200"
+                    }`}>
                     {demoStep >= 2 ? <Check className="h-3.5 w-3.5" /> : "1"}
                   </div>
                   <span className={`text-sm ${demoStep >= 1 ? "text-neutral-800 font-medium" : "text-neutral-400"}`}>
                     Decline event normalized and logged
                   </span>
                 </div>
-                
+
                 <div className="flex items-center gap-3">
-                  <div className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                    demoStep >= 2 ? "bg-emerald-50 text-emerald-600 border border-emerald-200" : "bg-neutral-100 text-neutral-400 border border-neutral-200"
-                  }`}>
+                  <div className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold ${demoStep >= 2 ? "bg-emerald-50 text-emerald-600 border border-emerald-200" : "bg-neutral-100 text-neutral-400 border border-neutral-200"
+                    }`}>
                     {demoStep >= 3 ? <Check className="h-3.5 w-3.5" /> : "2"}
                   </div>
                   <span className={`text-sm ${demoStep >= 2 ? "text-neutral-800 font-medium" : "text-neutral-400"}`}>
                     Risk score computed & registered
                   </span>
                 </div>
- 
+
                 <div className="flex items-center gap-3">
-                  <div className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                    demoStep >= 3 ? "bg-emerald-50 text-emerald-600 border border-emerald-200" : "bg-neutral-100 text-neutral-400 border border-neutral-200"
-                  }`}>
+                  <div className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold ${demoStep >= 3 ? "bg-emerald-50 text-emerald-600 border border-emerald-200" : "bg-neutral-100 text-neutral-400 border border-neutral-200"
+                    }`}>
                     {demoStep >= 4 ? <Check className="h-3.5 w-3.5" /> : "3"}
                   </div>
                   <span className={`text-sm ${demoStep >= 3 ? "text-neutral-800 font-medium" : "text-neutral-400"}`}>
                     {isHostedDemo ? "Autonomous Cloud AI Diagnosis complete" : "Local Ollama AI Diagnosis complete"}
                   </span>
                 </div>
- 
+
                 <div className="flex items-center gap-3">
-                  <div className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                    demoStep >= 4 ? "bg-emerald-50 text-emerald-600 border border-emerald-200" : "bg-neutral-100 text-neutral-400 border border-neutral-200"
-                  }`}>
+                  <div className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold ${demoStep >= 4 ? "bg-emerald-50 text-emerald-600 border border-emerald-200" : "bg-neutral-100 text-neutral-400 border border-neutral-200"
+                    }`}>
                     {demoStep >= 5 ? <Check className="h-3.5 w-3.5" /> : "4"}
                   </div>
                   <span className={`text-sm ${demoStep >= 4 ? "text-neutral-800 font-medium" : "text-neutral-400"}`}>
                     Safety recovery policy approved recommended action
                   </span>
                 </div>
- 
+
                 <div className="flex items-center gap-3">
-                  <div className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                    demoStep >= 5 ? "bg-emerald-50 text-emerald-600 border border-emerald-200" : "bg-neutral-100 text-neutral-400 border border-neutral-200"
-                  }`}>
+                  <div className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold ${demoStep >= 5 ? "bg-emerald-50 text-emerald-600 border border-emerald-200" : "bg-neutral-100 text-neutral-400 border border-neutral-200"
+                    }`}>
                     {demoStep >= 7 ? <Check className="h-3.5 w-3.5" /> : "5"}
                   </div>
                   <span className={`text-sm ${demoStep >= 5 ? "text-neutral-800 font-medium" : "text-neutral-400"}`}>
                     Intervention triggered: Recovery email dispatched to client
                   </span>
                 </div>
- 
+
                 <div className="flex items-center gap-3">
-                  <div className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                    demoStep >= 7 ? "bg-emerald-50 text-emerald-600 border border-emerald-200" : "bg-neutral-100 text-neutral-500 border border-neutral-300 animate-pulse"
-                  }`}>
+                  <div className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold ${demoStep >= 7 ? "bg-emerald-50 text-emerald-600 border border-emerald-200" : "bg-neutral-100 text-neutral-500 border border-neutral-300 animate-pulse"
+                    }`}>
                     {demoStep >= 7 ? <Check className="h-3.5 w-3.5" /> : "6"}
                   </div>
                   <span className={`text-sm ${demoStep >= 5 ? "text-neutral-800 font-medium" : "text-neutral-400"}`}>
@@ -804,7 +807,7 @@ export default function Dashboard() {
                   </span>
                 </div>
               </div>
- 
+
               {/* Interaction details */}
               <div className="lg:col-span-2 bg-neutral-50 border border-neutral-200 rounded-xl p-5 flex flex-col items-center justify-center text-center">
                 {demoStep < 7 ? (
@@ -812,10 +815,10 @@ export default function Dashboard() {
                     <Mail className="h-10 w-10 text-neutral-700 mb-3 animate-bounce" />
                     <h4 className="font-semibold text-neutral-800 text-sm">Customer Action Required</h4>
                     <p className="text-xs text-neutral-500 mt-2 max-w-sm leading-relaxed">
-                      We sent a dunning recovery email with a secure link to update payment details. 
+                      We sent a dunning recovery email with a secure link to update payment details.
                       Click below to open the portal and submit card details.
                     </p>
-                    <a 
+                    <a
                       href={`/update-payment?customer_id=${getCustomerIdByCase(selectedCase)}`}
                       target="_blank"
                       rel="noreferrer"
@@ -847,10 +850,10 @@ export default function Dashboard() {
                       {formatINR(selectedCase === "sarah" ? 7999 : selectedCase === "john" ? 499 : selectedCase === "clara" ? 1499 : selectedCase === "james" ? 999 : 2499)} Recovered
                     </strong>
                     <p className="text-xs text-neutral-500 mt-2 max-w-xs leading-relaxed">
-                      Customer updated their billing info successfully. 
+                      Customer updated their billing info successfully.
                       The workflow has been set to <strong>Completed</strong> and subscription status is restored to <strong>Active</strong>.
                     </p>
-                    <button 
+                    <button
                       onClick={() => { setDemoStep(0); setSimulationLogs([]); }}
                       className="mt-4 px-4 py-1.5 bg-neutral-200 hover:bg-neutral-300 text-neutral-700 rounded text-xs transition"
                     >
@@ -860,7 +863,7 @@ export default function Dashboard() {
                 )}
               </div>
             </div>
-            
+
             {/* Terminal log panel */}
             <div className="mt-6 border-t border-neutral-100 pt-4 space-y-2">
               <span className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Pipeline logs</span>
@@ -878,10 +881,10 @@ export default function Dashboard() {
             </div>
           </div>
         )}
- 
+
         {/* KPI Cards Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
-          
+
           {/* Card 1: Revenue at Risk */}
           <div className="bg-white border border-neutral-200 rounded-2xl p-5 transition relative overflow-hidden group shadow-sm">
             <div className="absolute top-0 right-0 p-3 text-neutral-100 group-hover:text-neutral-200 transition">
@@ -895,7 +898,7 @@ export default function Dashboard() {
             )}
             <p className="text-xs text-neutral-400 mt-1">Pending recovery interventions</p>
           </div>
- 
+
           {/* Card 2: Recoverable */}
           <div className="bg-white border border-neutral-200 rounded-2xl p-5 transition relative overflow-hidden group shadow-sm">
             <div className="absolute top-0 right-0 p-3 text-neutral-100 group-hover:text-neutral-200 transition">
@@ -909,7 +912,7 @@ export default function Dashboard() {
             )}
             <p className="text-xs text-neutral-400 mt-1">Weighted by AI recoverability score</p>
           </div>
- 
+
           {/* Card 3: Recovered */}
           <div className="bg-white border border-neutral-200 rounded-2xl p-5 transition relative overflow-hidden group shadow-sm">
             <div className="absolute top-0 right-0 p-3 text-neutral-100 group-hover:text-neutral-200 transition">
@@ -923,7 +926,7 @@ export default function Dashboard() {
             )}
             <p className="text-xs text-neutral-400 mt-1">Saved from billing failures</p>
           </div>
- 
+
           {/* Card 4: Active Loops */}
           <div className="bg-white border border-neutral-200 rounded-2xl p-5 transition relative overflow-hidden group shadow-sm">
             <div className="absolute top-0 right-0 p-3 text-neutral-100 group-hover:text-neutral-200 transition">
@@ -937,7 +940,7 @@ export default function Dashboard() {
             )}
             <p className="text-xs text-neutral-400 mt-1">Currently in-flight loops</p>
           </div>
- 
+
           {/* Card 5: Recovery rate */}
           <div className="bg-white border border-neutral-200 rounded-2xl p-5 transition relative overflow-hidden group shadow-sm">
             <div className="absolute top-0 right-0 p-3 text-neutral-100 group-hover:text-neutral-200 transition">
@@ -954,22 +957,22 @@ export default function Dashboard() {
             </p>
           </div>
         </div>
- 
+
         {/* Time-Series Trend Chart (LineChart) */}
         <div className="bg-white border border-neutral-200 rounded-2xl p-6 shadow-sm">
           <div className="mb-6">
             <h3 className="font-semibold text-neutral-800 text-sm uppercase tracking-wider">Revenue Recovery Over Time</h3>
             <p className="text-xs text-neutral-500 mt-0.5">Chronological trends of recovered revenue vs. unresolved revenue at risk</p>
           </div>
-          
+
           <div className="h-64 relative" role="region" aria-label="Line chart showing Revenue Recovery trends over time">
             {loading ? (
               <div className="absolute inset-0 flex items-center justify-center text-xs text-zinc-500">
                 <RefreshCw className="h-8 w-8 animate-spin text-blue-500" />
               </div>
             ) : data && data.trendChartData.length > 0 ? (
-              <LineChart 
-                data={data.trendChartData} 
+              <LineChart
+                data={data.trendChartData}
                 xDataKey="date"
                 aspectRatio=""
                 className="h-full"
@@ -988,25 +991,25 @@ export default function Dashboard() {
             )}
           </div>
         </div>
- 
+
         {/* Two-Column charts: Risk Level (BarChart) and Outcomes (PieChart) */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          
+
           {/* Risk Level Distribution (BarChart) */}
           <div className="bg-white border border-neutral-200 rounded-2xl p-6 shadow-sm">
             <div className="mb-6">
               <h3 className="font-semibold text-neutral-800 text-sm uppercase tracking-wider">Risk Level Distribution</h3>
               <p className="text-xs text-neutral-500 mt-0.5">Active customer accounts grouped by churn risk score level</p>
             </div>
-            
+
             <div className="h-64 relative" role="region" aria-label="Bar chart showing Customer Risk Level distribution">
               {loading ? (
                 <div className="absolute inset-0 flex items-center justify-center text-xs text-neutral-400">
                   <RefreshCw className="h-8 w-8 animate-spin text-neutral-500" />
                 </div>
               ) : data && data.riskDistributionData.length > 0 ? (
-                <BarChart 
-                  data={data.riskDistributionData} 
+                <BarChart
+                  data={data.riskDistributionData}
                   xDataKey="name"
                   aspectRatio=""
                   className="h-full"
@@ -1030,19 +1033,19 @@ export default function Dashboard() {
               <h3 className="font-semibold text-neutral-800 text-sm uppercase tracking-wider">Intervention Outcomes</h3>
               <p className="text-xs text-neutral-500 mt-0.5">Current statuses of triggered automated interventions</p>
             </div>
-            
+
             <div className="h-64 flex justify-center items-center relative" role="region" aria-label="Pie chart showing Recovery Intervention Outcomes">
               {loading ? (
                 <div className="absolute inset-0 flex items-center justify-center text-xs text-neutral-400">
                   <RefreshCw className="h-8 w-8 animate-spin text-neutral-500" />
                 </div>
               ) : data && data.recoveryOutcomesData.length > 0 ? (
-                <PieChart 
+                <PieChart
                   data={data.recoveryOutcomesData.map(slice => ({
                     label: slice.name,
                     value: slice.value,
                     color: slice.color
-                  }))} 
+                  }))}
                   innerRadius={60}
                   cornerRadius={4}
                   padAngle={0.02}
@@ -1243,10 +1246,10 @@ export default function Dashboard() {
 
         {/* At-Risk Customers Table & Timeline logs */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          
+
           {/* Customer Table */}
           <div className="col-span-1 lg:col-span-3 space-y-6">
-            
+
             {/* Filter Toolbar */}
             <div className="bg-white border border-neutral-200 rounded-2xl p-4 flex flex-col md:flex-row justify-between items-center gap-4">
               <div className="relative w-full md:w-80">
@@ -1259,7 +1262,7 @@ export default function Dashboard() {
                   className="w-full bg-neutral-50 border border-neutral-200 rounded-xl pl-10 pr-4 py-2 text-xs text-neutral-800 placeholder-neutral-400 focus:outline-none focus:border-neutral-400 focus:ring-1 focus:ring-neutral-400 transition"
                 />
               </div>
- 
+
               <div className="flex flex-wrap gap-2 w-full md:w-auto">
                 {/* Status selector */}
                 <div className="flex items-center gap-1 bg-neutral-50 border border-neutral-200 rounded-xl p-1">
@@ -1268,17 +1271,16 @@ export default function Dashboard() {
                     <button
                       key={st}
                       onClick={() => setStatusFilter(st)}
-                      className={`px-2 py-1 rounded-lg text-[10px] font-bold capitalize transition ${
-                        statusFilter === st
+                      className={`px-2 py-1 rounded-lg text-[10px] font-bold capitalize transition ${statusFilter === st
                           ? "bg-white text-neutral-900 border border-neutral-200"
                           : "text-neutral-500 hover:text-neutral-900"
-                      }`}
+                        }`}
                     >
                       {st.replace("_", " ")}
                     </button>
                   ))}
                 </div>
- 
+
                 {/* Risk Selector */}
                 <div className="flex items-center gap-1 bg-neutral-50 border border-neutral-200 rounded-xl p-1">
                   <BarChart3 className="h-3 w-3 text-neutral-400 ml-2" />
@@ -1286,11 +1288,10 @@ export default function Dashboard() {
                     <button
                       key={rk}
                       onClick={() => setRiskFilter(rk)}
-                      className={`px-2 py-1 rounded-lg text-[10px] font-bold capitalize transition ${
-                        riskFilter === rk
+                      className={`px-2 py-1 rounded-lg text-[10px] font-bold capitalize transition ${riskFilter === rk
                           ? "bg-white text-neutral-900 border border-neutral-200"
                           : "text-neutral-500 hover:text-neutral-900"
-                      }`}
+                        }`}
                     >
                       {rk}
                     </button>
@@ -1298,7 +1299,7 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
-            
+
             {/* Table Card */}
             <div className="bg-white border border-neutral-200 rounded-2xl overflow-hidden shadow-sm">
               <div className="px-6 py-4 border-b border-neutral-100 flex justify-between items-center">
@@ -1307,7 +1308,7 @@ export default function Dashboard() {
                   <RefreshCw className="h-4 w-4" />
                 </button>
               </div>
- 
+
               <div className="w-full overflow-hidden">
                 <table className="w-full text-left border-collapse table-auto">
                   <thead>
@@ -1369,15 +1370,14 @@ export default function Dashboard() {
                           </td>
                           <td className="px-4 py-3.5 text-center whitespace-nowrap">
                             <span
-                              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                                risk.risk_level === "critical"
+                              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${risk.risk_level === "critical"
                                   ? "bg-rose-50 text-rose-700 border border-rose-200"
                                   : risk.risk_level === "high"
-                                  ? "bg-amber-50 text-amber-700 border border-amber-200"
-                                  : risk.risk_level === "medium"
-                                  ? "bg-amber-50/70 text-amber-800 border border-amber-200"
-                                  : "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                              }`}
+                                    ? "bg-amber-50 text-amber-700 border border-amber-200"
+                                    : risk.risk_level === "medium"
+                                      ? "bg-amber-50/70 text-amber-800 border border-amber-200"
+                                      : "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                                }`}
                             >
                               <AlertTriangle className="h-3 w-3 shrink-0" />
                               {risk.risk_score} - {risk.risk_level}
@@ -1389,8 +1389,8 @@ export default function Dashboard() {
                                 {risk.workflows?.[0]?.recommended_action === "send_payment_recovery_email"
                                   ? "Send Recovery Email"
                                   : risk.workflows?.[0]?.recommended_action === "no_action"
-                                  ? "No Action"
-                                  : "Pending AI"}
+                                    ? "No Action"
+                                    : "Pending AI"}
                               </span>
                               {risk.workflows?.[0]?.id && (
                                 <>
@@ -1421,13 +1421,12 @@ export default function Dashboard() {
                           <td className="px-4 py-3.5 text-right whitespace-nowrap">
                             <div className="inline-flex items-center gap-2">
                               <span
-                                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border ${
-                                  risk.status === "recovered"
+                                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border ${risk.status === "recovered"
                                     ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                                     : risk.status === "in_recovery"
-                                    ? "bg-purple-50 text-purple-700 border-purple-200"
-                                    : "bg-neutral-50 text-neutral-700 border-neutral-200"
-                                }`}
+                                      ? "bg-purple-50 text-purple-700 border-purple-200"
+                                      : "bg-neutral-50 text-neutral-700 border-neutral-200"
+                                  }`}
                               >
                                 {risk.status === "recovered" ? (
                                   <>
@@ -1457,7 +1456,7 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
- 
+
           {/* Live Activity Timeline */}
           <div className="col-span-1 space-y-6">
             <div className="bg-white border border-neutral-200 rounded-2xl p-5 shadow-sm">
@@ -1495,12 +1494,12 @@ export default function Dashboard() {
           </div>
         </div>
       </main>
- 
+
       {/* Drawer: Detailed Workflow view */}
       {selectedRisk && (
         <div className="fixed inset-0 z-50 bg-black/30 backdrop-blur-sm flex justify-end transition-opacity">
           <div className="w-full max-w-xl bg-white border-l border-neutral-200 h-full overflow-y-auto flex flex-col relative shadow-2xl">
-            
+
             {/* Drawer Header */}
             <div className="p-6 border-b border-neutral-200 flex justify-between items-center bg-neutral-50/50">
               <div>
@@ -1514,10 +1513,10 @@ export default function Dashboard() {
                 <X className="h-5 w-5" />
               </button>
             </div>
- 
+
             {/* Drawer Body */}
             <div className="p-6 space-y-6 flex-1 text-xs text-neutral-700">
-              
+
               {/* Account summary cards */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-neutral-50 p-4 border border-neutral-200 rounded-xl">
@@ -1531,7 +1530,7 @@ export default function Dashboard() {
                   <span className="text-[10px] text-neutral-500">First attempt decline</span>
                 </div>
               </div>
- 
+
               {/* AI Diagnosis Insights */}
               <div className="bg-neutral-50 border border-neutral-200 rounded-xl p-4 relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-3 bg-neutral-100/50 text-neutral-700 rounded-bl-xl border-l border-b border-neutral-200">
@@ -1552,7 +1551,7 @@ export default function Dashboard() {
                     </button>
                   )}
                 </div>
-                
+
                 <div className="space-y-3 mt-4 text-xs text-neutral-600">
                   <div>
                     <span className="text-neutral-500 font-semibold text-[10px] uppercase tracking-wider block">Diagnosis Summary</span>
@@ -1560,7 +1559,7 @@ export default function Dashboard() {
                       {selectedRisk.reason}
                     </p>
                   </div>
-                  
+
                   <div className="grid grid-cols-2 gap-3 pt-1">
                     <div>
                       <span className="text-neutral-500 block text-[10px] uppercase font-bold tracking-wider">Recoverability Index</span>
@@ -1587,11 +1586,10 @@ export default function Dashboard() {
                         .map((event: any) => (
                           <div key={event.id} className="flex justify-between items-center text-xs py-1.5 border-b border-neutral-200/50 last:border-b-0">
                             <div className="flex items-center gap-2">
-                              <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${
-                                event.status === "succeeded" 
-                                  ? "bg-emerald-50 text-emerald-700 border border-emerald-200" 
+                              <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${event.status === "succeeded"
+                                  ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
                                   : "bg-rose-50 text-rose-700 border border-rose-200"
-                              }`}>
+                                }`}>
                                 {event.status === "succeeded" ? "Success" : "Failed"}
                               </span>
                               <span className="font-mono font-semibold text-neutral-800">{formatINR(event.amount)}</span>
@@ -1615,11 +1613,10 @@ export default function Dashboard() {
                 <div className="bg-neutral-50 border border-neutral-200 rounded-xl p-4 space-y-3">
                   <div className="flex justify-between items-center">
                     <span className="text-neutral-500 font-medium text-xs">Action Status</span>
-                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold border uppercase tracking-wider ${
-                      selectedRisk.status === "recovered"
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold border uppercase tracking-wider ${selectedRisk.status === "recovered"
                         ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                         : "bg-neutral-50 text-neutral-700 border border-neutral-200"
-                    }`}>
+                      }`}>
                       {selectedRisk.status === "recovered" ? "Payment Recovered" : "Automated Recovery Mail Sent"}
                     </span>
                   </div>
@@ -1635,7 +1632,7 @@ export default function Dashboard() {
                   </div>
                 </div>
               </div>
- 
+
               {/* Simulation resolution panel */}
               {selectedRisk.status !== "recovered" && (
                 <div className="bg-neutral-50/50 border border-dashed border-neutral-200 rounded-xl p-4 flex flex-col gap-3">
@@ -1645,27 +1642,17 @@ export default function Dashboard() {
                       Simulate a customer clicking the update-payment link inside their email, changing card details, and resolving the billing failure.
                     </p>
                   </div>
-                  
-                  {selectedRisk.workflows?.[0]?.id && (
-                    <>
-                      <button
-                        onClick={() => handleOpenAgentChat(selectedRisk.workflows[0].id, selectedRisk.customer?.name, selectedRisk.subscription?.plan_name)}
-                        className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-amber-50 hover:bg-amber-100 text-amber-950 border border-amber-300 rounded-lg font-semibold text-xs transition shadow-sm"
-                      >
-                        <Bot className="h-3.5 w-3.5 text-amber-700" />
-                        Ask AI Billing Agent
-                      </button>
 
-                      <button
-                        onClick={() => handleOpenEmailPreview(selectedRisk.workflows[0].id)}
-                        className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-white hover:bg-neutral-100 text-neutral-800 border border-neutral-300 rounded-lg font-semibold text-xs transition shadow-sm"
-                      >
-                        <Sparkles className="h-3.5 w-3.5 text-amber-600" />
-                        Preview AI-Generated Recovery Email
-                      </button>
-                    </>
+                  {selectedRisk.workflows?.[0]?.id && (
+                    <button
+                      onClick={() => handleOpenEmailPreview(selectedRisk.workflows[0].id)}
+                      className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-white hover:bg-neutral-100 text-neutral-800 border border-neutral-300 rounded-lg font-semibold text-xs transition shadow-sm"
+                    >
+                      <Sparkles className="h-3.5 w-3.5 text-amber-600" />
+                      Preview AI-Generated Recovery Email
+                    </button>
                   )}
-                  
+
                   <button
                     onClick={() => handleSimulateRecovery(selectedRisk.workflows?.[0]?.id)}
                     disabled={recoveringId !== null}
@@ -1676,7 +1663,7 @@ export default function Dashboard() {
                   </button>
                 </div>
               )}
- 
+
             </div>
           </div>
         </div>
@@ -1743,9 +1730,8 @@ export default function Dashboard() {
                     </div>
                     <div className="bg-white border border-neutral-200 rounded-xl p-3 shadow-2xs">
                       <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block">Urgency Rating</span>
-                      <span className={`font-semibold text-[11px] mt-0.5 block uppercase tracking-wider ${
-                        emailData.urgency_badge === "high" ? "text-rose-600" : emailData.urgency_badge === "medium" ? "text-amber-700" : "text-emerald-700"
-                      }`}>
+                      <span className={`font-semibold text-[11px] mt-0.5 block uppercase tracking-wider ${emailData.urgency_badge === "high" ? "text-rose-600" : emailData.urgency_badge === "medium" ? "text-amber-700" : "text-emerald-700"
+                        }`}>
                         {emailData.urgency_badge} Priority
                       </span>
                     </div>
@@ -1848,201 +1834,6 @@ export default function Dashboard() {
                 Close Preview
               </button>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* Interactive "Ask the AI Billing Agent" Chat Drawer Modal */}
-      {chatDrawerOpen && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex justify-end transition-opacity animate-in fade-in duration-200">
-          <div className="w-full max-w-xl bg-white border-l border-neutral-200 h-full flex flex-col relative shadow-2xl overflow-hidden">
-            
-            {/* Drawer Header */}
-            <div className="p-5 border-b border-neutral-200 flex justify-between items-center bg-[#FDFBF7]">
-              <div className="flex items-center gap-3">
-                <div className="h-9 w-9 rounded-xl bg-neutral-900 text-amber-400 flex items-center justify-center border border-neutral-800 shadow-sm shrink-0">
-                  <Bot className="h-5 w-5" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-sm font-bold text-neutral-900">Ask AI Billing Agent</h2>
-                    <span className="text-[10px] font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
-                      Interactive Assistant
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-neutral-500 mt-0.5">
-                    Grounded in {chatCustomerName}'s live payment history, decline risk, and policy status.
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => setChatDrawerOpen(false)}
-                className="text-neutral-400 hover:text-neutral-800 bg-neutral-100 hover:bg-neutral-200 p-1.5 rounded-lg transition"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            {/* Model & Privacy Badges Header Strip */}
-            <div className="bg-neutral-50 border-b border-neutral-200/80 px-5 py-2 flex items-center justify-between text-[10px]">
-              <div className="flex items-center gap-1.5 text-neutral-600">
-                <Sparkles className="h-3 w-3 text-amber-600" />
-                <span>Model: <strong className="font-semibold text-neutral-800">{chatModelUsed || "Qwen 3.5 9B (Local)"}</strong></span>
-              </div>
-              <div className="flex items-center gap-1.5 text-emerald-700">
-                <ShieldCheck className="h-3 w-3 text-emerald-600" />
-                <span>PCI-DSS & Zero PII Leaked</span>
-              </div>
-            </div>
-
-            {/* Customer Quick Dossier Strip */}
-            <div className="bg-neutral-900 text-white px-5 py-3 flex items-center justify-between text-xs border-b border-neutral-800">
-              <div className="flex items-center gap-2">
-                <User className="h-4 w-4 text-amber-400" />
-                <span className="font-bold">{chatCustomerName}</span>
-                <span className="text-neutral-400">•</span>
-                <span className="text-neutral-300 font-mono">{chatPlanName} Plan</span>
-              </div>
-              <span className="px-2 py-0.5 rounded bg-neutral-800 text-amber-300 font-mono text-[10px] border border-neutral-700">
-                Workflow Ref: {chatWorkflowId?.slice(0, 8)}...
-              </span>
-            </div>
-
-            {/* Preset Question Chips */}
-            <div className="p-4 bg-neutral-50/60 border-b border-neutral-200 space-y-1.5">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block">
-                Suggested Strategic Inquiries
-              </span>
-              <div className="flex flex-wrap gap-1.5">
-                <button
-                  type="button"
-                  onClick={() => handleSendChatMessage("Why was this recovery approved or blocked by policy?")}
-                  className="text-[11px] bg-white hover:bg-neutral-100 text-neutral-700 border border-neutral-200 px-2.5 py-1 rounded-lg font-medium transition shadow-2xs text-left"
-                >
-                  "Why was this recovery approved or blocked by policy?"
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleSendChatMessage("What is the best strategy to prevent this customer from churning?")}
-                  className="text-[11px] bg-white hover:bg-neutral-100 text-neutral-700 border border-neutral-200 px-2.5 py-1 rounded-lg font-medium transition shadow-2xs text-left"
-                >
-                  "What is the best strategy to prevent churn?"
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleSendChatMessage("Should we execute an immediate manual retry or wait?")}
-                  className="text-[11px] bg-white hover:bg-neutral-100 text-neutral-700 border border-neutral-200 px-2.5 py-1 rounded-lg font-medium transition shadow-2xs text-left"
-                >
-                  "Should we execute a retry or wait?"
-                </button>
-              </div>
-            </div>
-
-            {/* Chat Messages Body */}
-            <div className="flex-1 p-5 overflow-y-auto space-y-4 custom-scrollbar text-xs bg-white" ref={chatScrollRef}>
-              {chatMessages.map((msg, idx) => (
-                <div
-                  key={idx}
-                  className={`flex flex-col ${msg.role === "user" ? "items-end" : "items-start"}`}
-                >
-                  <div className="flex items-center gap-1.5 mb-1 text-[10px] text-neutral-400">
-                    {msg.role === "user" ? (
-                      <>
-                        <span className="font-semibold text-neutral-600">You (Operator)</span>
-                        <User className="h-3 w-3 text-neutral-500" />
-                      </>
-                    ) : (
-                      <>
-                        <Bot className="h-3 w-3 text-amber-600" />
-                        <span className="font-semibold text-neutral-800">AI Billing Agent</span>
-                      </>
-                    )}
-                  </div>
-
-                  <div
-                    className={`max-w-[88%] rounded-2xl p-3.5 text-xs leading-relaxed ${
-                      msg.role === "user"
-                        ? "bg-neutral-900 text-white font-medium rounded-tr-none shadow-sm"
-                        : "bg-neutral-50 border border-neutral-200 text-neutral-800 rounded-tl-none shadow-2xs"
-                    }`}
-                  >
-                    {msg.role === "user" ? (
-                      <p className="whitespace-pre-wrap">{msg.content}</p>
-                    ) : (
-                      <div className="space-y-2">
-                        {msg.content.split("\n\n").map((para, pIdx) => (
-                          <div key={pIdx} className="space-y-1">
-                            {para.split("\n").map((line, lIdx) => {
-                              const isBullet = line.trim().startsWith("•") || line.trim().startsWith("-");
-                              const cleanLine = isBullet ? line.trim().replace(/^[-•]\s*/, "") : line;
-                              const parts = cleanLine.split(/(\*\*.*?\*\*)/g);
-
-                              return (
-                                <p key={lIdx} className={isBullet ? "flex items-start gap-1.5 pl-2 text-neutral-700" : "text-neutral-800"}>
-                                  {isBullet && <span className="text-neutral-400 font-bold shrink-0">•</span>}
-                                  <span>
-                                    {parts.map((part, partIdx) => {
-                                      if (part.startsWith("**") && part.endsWith("**")) {
-                                        return (
-                                          <strong key={partIdx} className="font-bold text-neutral-900">
-                                            {part.slice(2, -2)}
-                                          </strong>
-                                        );
-                                      }
-                                      return part;
-                                    })}
-                                  </span>
-                                </p>
-                              );
-                            })}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-
-              {chatLoading && (
-                <div className="flex flex-col items-start">
-                  <div className="flex items-center gap-1.5 mb-1 text-[10px] text-neutral-400">
-                    <Bot className="h-3 w-3 text-amber-600 animate-spin" />
-                    <span className="font-semibold text-neutral-800">AI Billing Agent thinking...</span>
-                  </div>
-                  <div className="bg-neutral-50 border border-neutral-200 rounded-2xl rounded-tl-none p-3.5 text-xs text-neutral-500 flex items-center gap-2 shadow-2xs">
-                    <RefreshCw className="h-3.5 w-3.5 animate-spin text-neutral-600" />
-                    <span>Analyzing billing context and policy engine constraints...</span>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Input Footer Form */}
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                handleSendChatMessage();
-              }}
-              className="p-4 border-t border-neutral-200 bg-neutral-50/70 flex items-center gap-2"
-            >
-              <input
-                type="text"
-                value={chatInput}
-                onChange={(e) => setChatInput(e.target.value)}
-                placeholder={`Ask AI agent about ${chatCustomerName}'s billing issue or churn risk...`}
-                disabled={chatLoading}
-                className="flex-1 bg-white border border-neutral-200 rounded-xl px-3.5 py-2.5 text-xs text-neutral-800 placeholder-neutral-400 focus:outline-none focus:border-neutral-400 focus:ring-1 focus:ring-neutral-400 transition shadow-2xs disabled:opacity-50"
-              />
-              <button
-                type="submit"
-                disabled={chatLoading || !chatInput.trim()}
-                className="px-4 py-2.5 bg-neutral-900 hover:bg-neutral-800 text-white rounded-xl text-xs font-bold transition disabled:opacity-50 flex items-center gap-1.5 shadow-sm shrink-0"
-              >
-                <span>Send</span>
-                <Send className="h-3.5 w-3.5 text-amber-400" />
-              </button>
-            </form>
-
           </div>
         </div>
       )}
