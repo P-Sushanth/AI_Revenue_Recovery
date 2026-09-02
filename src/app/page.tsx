@@ -1853,6 +1853,201 @@ export default function Dashboard() {
           </div>
         </div>
       )}
+
+      {/* Interactive "Ask the AI Billing Agent" Chat Drawer Modal */}
+      {chatDrawerOpen && (
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex justify-end transition-opacity animate-in fade-in duration-200">
+          <div className="w-full max-w-xl bg-white border-l border-neutral-200 h-full flex flex-col relative shadow-2xl overflow-hidden">
+            
+            {/* Drawer Header */}
+            <div className="p-5 border-b border-neutral-200 flex justify-between items-center bg-[#FDFBF7]">
+              <div className="flex items-center gap-3">
+                <div className="h-9 w-9 rounded-xl bg-neutral-900 text-amber-400 flex items-center justify-center border border-neutral-800 shadow-sm shrink-0">
+                  <Bot className="h-5 w-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-sm font-bold text-neutral-900">Ask AI Billing Agent</h2>
+                    <span className="text-[10px] font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                      Interactive Assistant
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-neutral-500 mt-0.5">
+                    Grounded in {chatCustomerName}'s live payment history, decline risk, and policy status.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setChatDrawerOpen(false)}
+                className="text-neutral-400 hover:text-neutral-800 bg-neutral-100 hover:bg-neutral-200 p-1.5 rounded-lg transition"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Model & Privacy Badges Header Strip */}
+            <div className="bg-neutral-50 border-b border-neutral-200/80 px-5 py-2 flex items-center justify-between text-[10px]">
+              <div className="flex items-center gap-1.5 text-neutral-600">
+                <Sparkles className="h-3 w-3 text-amber-600" />
+                <span>Model: <strong className="font-semibold text-neutral-800">{chatModelUsed || "Qwen 3.5 9B (Local)"}</strong></span>
+              </div>
+              <div className="flex items-center gap-1.5 text-emerald-700">
+                <ShieldCheck className="h-3 w-3 text-emerald-600" />
+                <span>PCI-DSS & Zero PII Leaked</span>
+              </div>
+            </div>
+
+            {/* Customer Quick Dossier Strip */}
+            <div className="bg-neutral-900 text-white px-5 py-3 flex items-center justify-between text-xs border-b border-neutral-800">
+              <div className="flex items-center gap-2">
+                <User className="h-4 w-4 text-amber-400" />
+                <span className="font-bold">{chatCustomerName}</span>
+                <span className="text-neutral-400">•</span>
+                <span className="text-neutral-300 font-mono">{chatPlanName} Plan</span>
+              </div>
+              <span className="px-2 py-0.5 rounded bg-neutral-800 text-amber-300 font-mono text-[10px] border border-neutral-700">
+                Workflow Ref: {chatWorkflowId?.slice(0, 8)}...
+              </span>
+            </div>
+
+            {/* Preset Question Chips */}
+            <div className="p-4 bg-neutral-50/60 border-b border-neutral-200 space-y-1.5">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block">
+                Suggested Strategic Inquiries
+              </span>
+              <div className="flex flex-wrap gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => handleSendChatMessage("Why was this recovery approved or blocked by policy?")}
+                  className="text-[11px] bg-white hover:bg-neutral-100 text-neutral-700 border border-neutral-200 px-2.5 py-1 rounded-lg font-medium transition shadow-2xs text-left"
+                >
+                  "Why was this recovery approved or blocked by policy?"
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSendChatMessage("What is the best strategy to prevent this customer from churning?")}
+                  className="text-[11px] bg-white hover:bg-neutral-100 text-neutral-700 border border-neutral-200 px-2.5 py-1 rounded-lg font-medium transition shadow-2xs text-left"
+                >
+                  "What is the best strategy to prevent churn?"
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSendChatMessage("Should we execute an immediate manual retry or wait?")}
+                  className="text-[11px] bg-white hover:bg-neutral-100 text-neutral-700 border border-neutral-200 px-2.5 py-1 rounded-lg font-medium transition shadow-2xs text-left"
+                >
+                  "Should we execute a retry or wait?"
+                </button>
+              </div>
+            </div>
+
+            {/* Chat Messages Body */}
+            <div className="flex-1 p-5 overflow-y-auto space-y-4 custom-scrollbar text-xs bg-white" ref={chatScrollRef}>
+              {chatMessages.map((msg, idx) => (
+                <div
+                  key={idx}
+                  className={`flex flex-col ${msg.role === "user" ? "items-end" : "items-start"}`}
+                >
+                  <div className="flex items-center gap-1.5 mb-1 text-[10px] text-neutral-400">
+                    {msg.role === "user" ? (
+                      <>
+                        <span className="font-semibold text-neutral-600">You (Operator)</span>
+                        <User className="h-3 w-3 text-neutral-500" />
+                      </>
+                    ) : (
+                      <>
+                        <Bot className="h-3 w-3 text-amber-600" />
+                        <span className="font-semibold text-neutral-800">AI Billing Agent</span>
+                      </>
+                    )}
+                  </div>
+
+                  <div
+                    className={`max-w-[88%] rounded-2xl p-3.5 text-xs leading-relaxed ${
+                      msg.role === "user"
+                        ? "bg-neutral-900 text-white font-medium rounded-tr-none shadow-sm"
+                        : "bg-neutral-50 border border-neutral-200 text-neutral-800 rounded-tl-none shadow-2xs"
+                    }`}
+                  >
+                    {msg.role === "user" ? (
+                      <p className="whitespace-pre-wrap">{msg.content}</p>
+                    ) : (
+                      <div className="space-y-2">
+                        {msg.content.split("\n\n").map((para, pIdx) => (
+                          <div key={pIdx} className="space-y-1">
+                            {para.split("\n").map((line, lIdx) => {
+                              const isBullet = line.trim().startsWith("•") || line.trim().startsWith("-");
+                              const cleanLine = isBullet ? line.trim().replace(/^[-•]\s*/, "") : line;
+                              const parts = cleanLine.split(/(\*\*.*?\*\*)/g);
+
+                              return (
+                                <p key={lIdx} className={isBullet ? "flex items-start gap-1.5 pl-2 text-neutral-700" : "text-neutral-800"}>
+                                  {isBullet && <span className="text-neutral-400 font-bold shrink-0">•</span>}
+                                  <span>
+                                    {parts.map((part, partIdx) => {
+                                      if (part.startsWith("**") && part.endsWith("**")) {
+                                        return (
+                                          <strong key={partIdx} className="font-bold text-neutral-900">
+                                            {part.slice(2, -2)}
+                                          </strong>
+                                        );
+                                      }
+                                      return part;
+                                    })}
+                                  </span>
+                                </p>
+                              );
+                            })}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+
+              {chatLoading && (
+                <div className="flex flex-col items-start">
+                  <div className="flex items-center gap-1.5 mb-1 text-[10px] text-neutral-400">
+                    <Bot className="h-3 w-3 text-amber-600 animate-spin" />
+                    <span className="font-semibold text-neutral-800">AI Billing Agent thinking...</span>
+                  </div>
+                  <div className="bg-neutral-50 border border-neutral-200 rounded-2xl rounded-tl-none p-3.5 text-xs text-neutral-500 flex items-center gap-2 shadow-2xs">
+                    <RefreshCw className="h-3.5 w-3.5 animate-spin text-neutral-600" />
+                    <span>Analyzing billing context and policy engine constraints...</span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Input Footer Form */}
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSendChatMessage();
+              }}
+              className="p-4 border-t border-neutral-200 bg-neutral-50/70 flex items-center gap-2"
+            >
+              <input
+                type="text"
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                placeholder={`Ask AI agent about ${chatCustomerName}'s billing issue or churn risk...`}
+                disabled={chatLoading}
+                className="flex-1 bg-white border border-neutral-200 rounded-xl px-3.5 py-2.5 text-xs text-neutral-800 placeholder-neutral-400 focus:outline-none focus:border-neutral-400 focus:ring-1 focus:ring-neutral-400 transition shadow-2xs disabled:opacity-50"
+              />
+              <button
+                type="submit"
+                disabled={chatLoading || !chatInput.trim()}
+                className="px-4 py-2.5 bg-neutral-900 hover:bg-neutral-800 text-white rounded-xl text-xs font-bold transition disabled:opacity-50 flex items-center gap-1.5 shadow-sm shrink-0"
+              >
+                <span>Send</span>
+                <Send className="h-3.5 w-3.5 text-amber-400" />
+              </button>
+            </form>
+
+          </div>
+        </div>
+      )}
     </div>
   );
 }

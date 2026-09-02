@@ -176,7 +176,7 @@ function TooltipBoxInner({
   const transformOrigin = isFlipped ? "right top" : "left top";
 
   const panelClassName = cn(
-    "min-w-[140px] overflow-hidden rounded-xl text-white shadow-2xl border border-white/15 bg-neutral-900/95 backdrop-blur-md",
+    "min-w-[140px] overflow-hidden rounded-xl text-neutral-900 shadow-xl border border-neutral-200/90 bg-white/95 backdrop-blur-md",
     className
   );
   const panelStyleResolved = {
