@@ -831,3 +831,172 @@ Output JSON strictly conforming to the requested schema.`;
     };
   }
 }
+
+/**
+ * Heuristic chat reply generator when LLM is offline or in cloud demo mode.
+ */
+function generateHeuristicChatReply(
+  customerName: string,
+  planName: string,
+  amountFormatted: string,
+  failureCode: string,
+  failureMessage: string,
+  attemptNumber: number,
+  riskLevel: string,
+  subscriptionStatus: string,
+  workflowStatus: string,
+  actionStatus: string,
+  lastQuestion: string
+): string {
+  const q = lastQuestion.toLowerCase();
+
+  if (q.includes("why") && (q.includes("block") || q.includes("reject") || q.includes("deny") || q.includes("policy"))) {
+    if (subscriptionStatus === "cancelled") {
+      return `Automated recovery for **${customerName}** was **blocked by Policy Rule #2** because their subscription is currently **cancelled**. Initiating payment outreach to a cancelled account creates customer friction and violates retention policy. The recommended strategy is manual win-back or standard churn survey.`;
+    }
+    if (riskLevel === "low") {
+      return `Outreach for **${customerName}** was **bypassed by Policy Rule #3** because their risk level is classified as **LOW**. For low-risk transient declines, gateway smart retries resolve 85%+ of payments automatically without nagging the customer via email.`;
+    }
+    return `The recovery action for **${customerName}** was processed according to safety guardrails. The workflow status is currently **${workflowStatus}** with action status **${actionStatus}**.`;
+  }
+
+  if (q.includes("churn") || q.includes("discount") || q.includes("offer") || q.includes("retention")) {
+    if (attemptNumber >= 3 || riskLevel === "critical") {
+      return `**${customerName}** has experienced ${attemptNumber} consecutive payment declines on their **${planName}** plan (${amountFormatted}), putting them at **CRITICAL churn risk (90/100)**. I recommend granting a **3-day grace period** combined with a **15% discount on an Annual switch** to secure long-term retention.`;
+    }
+    return `For **${customerName}** on the **${planName}** plan (${amountFormatted}), churn risk is currently **${riskLevel.toUpperCase()}**. A simple self-service card update link or 3DS re-authorization prompt is the highest-converting strategy without needing aggressive discounts.`;
+  }
+
+  if (q.includes("retry") || q.includes("when") || q.includes("time") || q.includes("schedule")) {
+    if (failureCode === "insufficient_funds") {
+      return `For **${customerName}**'s decline reason (*insufficient funds*), the optimal retry window is on the **1st of the month between 9:00 AM – 11:00 AM IST** (following salary credit cycles). Immediate re-attempts should be avoided.`;
+    }
+    if (failureCode === "expired_card") {
+      return `For **${customerName}**'s decline reason (*expired card*), automated gateway retries will continue to fail until card credentials are updated. We recommend sending a direct self-service link immediately.`;
+    }
+    return `Based on **${customerName}**'s decline profile (${failureCode}), gateway retry window is set for **24 hours post-failure** to accommodate bank settlement clearing.`;
+  }
+
+  return `Here is the current AI intelligence dossier for **${customerName}**:\n\n` +
+    `• **Plan**: ${planName} (${amountFormatted})\n` +
+    `• **Status**: Subscription is ${subscriptionStatus}, Workflow is ${workflowStatus}\n` +
+    `• **Decline Reason**: ${failureCode} ("${failureMessage}")\n` +
+    `• **Consecutive Attempts**: ${attemptNumber}\n` +
+    `• **Risk Category**: ${riskLevel.toUpperCase()}\n\n` +
+    `Recommended Next Step: ${actionStatus === "approved" ? "Monitor customer card update via self-service portal." : "Review account policy status or initiate manual outreach."}`;
+}
+
+/**
+ * Interactive Q&A Chat with the AI Billing Agent grounded in a customer's payment dossier.
+ * Uses local Ollama Qwen if available, with graceful autonomous heuristic fallback.
+ */
+export async function chatWithBillingAgent({
+  workflowId,
+  messages,
+}: {
+  workflowId: string;
+  messages: LLMMessage[];
+}): Promise<{ reply: string; model_used: string }> {
+  const db = getDbClient(true);
+
+  // 1. Fetch workflow context
+  const { data: workflow } = await db
+    .from("recovery_workflows")
+    .select("*")
+    .eq("id", workflowId)
+    .single();
+
+  if (!workflow) {
+    throw new Error(`Workflow ${workflowId} not found.`);
+  }
+
+  const { data: customer } = await db
+    .from("customers")
+    .select("*")
+    .eq("id", workflow.customer_id)
+    .single();
+
+  const { data: subscription } = await db
+    .from("subscriptions")
+    .select("*")
+    .eq("id", workflow.subscription_id)
+    .single();
+
+  const { data: risk } = await db
+    .from("revenue_risks")
+    .select("*")
+    .eq("id", workflow.revenue_risk_id)
+    .single();
+
+  const { data: paymentEvent } = await db
+    .from("payment_events")
+    .select("*")
+    .eq("id", risk?.payment_event_id || "")
+    .maybeSingle();
+
+  const customerName = customer?.name || "Valued Customer";
+  const planName = subscription?.plan_name || "Pro";
+  const amountFormatted = subscription ? `₹${Number(subscription.amount).toLocaleString("en-IN")}` : "₹2,499";
+  const failureCode = paymentEvent?.failure_code || "card_declined";
+  const failureMessage = paymentEvent?.failure_message || "Card authorization declined";
+  const attemptNumber = Number(paymentEvent?.attempt_number || 1);
+  const riskLevel = risk?.risk_level || "medium";
+  const subscriptionStatus = subscription?.status || "active";
+  const workflowStatus = workflow?.status || "pending";
+  const actionStatus = workflow?.action_status || "pending";
+
+  const systemPrompt = `You are the RecoverAI Autonomous Billing & Revenue Recovery Strategist.
+You are conversing with a finance operator or customer success manager who is asking questions about a specific customer payment failure.
+
+Context Dossier:
+- Customer Name: ${customerName}
+- Subscription Plan: ${planName} (${amountFormatted})
+- Subscription Status: ${subscriptionStatus}
+- Failure Reason: ${failureCode} ("${failureMessage}")
+- Consecutive Attempts: ${attemptNumber}
+- Risk Level: ${riskLevel} (Score: ${risk?.risk_score || 50}/100)
+- Recoverability Index: ${risk?.recoverability_score || 70}/100
+- Workflow Status: ${workflowStatus}
+- Action Authorization Status: ${actionStatus}
+- Recommended Action: ${workflow.recommended_action || "send_payment_recovery_email"}
+
+Instructions:
+1. Provide concise, clear, and expert billing advice.
+2. Format key points using markdown bolding and bullet points.
+3. Keep responses helpful, grounded strictly in the customer's dossier, and focused on revenue recovery and churn prevention.`;
+
+  const fullMessages: LLMMessage[] = [
+    { role: "system", content: systemPrompt },
+    ...messages,
+  ];
+
+  const lastUserMessage = messages.filter((m) => m.role === "user").pop()?.content || "";
+
+  try {
+    const rawReply = await callLLM(fullMessages);
+    return {
+      reply: rawReply.trim(),
+      model_used: process.env.LOCAL_LLM_MODEL || "Qwen 3.5 9B (Local)",
+    };
+  } catch (err: any) {
+    console.warn(`Local LLM offline for chat agent (${err.message}). Activating Autonomous Heuristic Chat Engine.`);
+    const heuristicReply = generateHeuristicChatReply(
+      customerName,
+      planName,
+      amountFormatted,
+      failureCode,
+      failureMessage,
+      attemptNumber,
+      riskLevel,
+      subscriptionStatus,
+      workflowStatus,
+      actionStatus,
+      lastUserMessage
+    );
+
+    return {
+      reply: heuristicReply,
+      model_used: "Autonomous Recovery Engine (Cloud Mode)",
+    };
+  }
+}

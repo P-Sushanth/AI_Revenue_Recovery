@@ -24,6 +24,8 @@ import {
   FileText,
   Send,
   Lock,
+  MessageSquare,
+  Bot,
 } from "lucide-react";
  
 // Bklit UI components
@@ -177,6 +179,84 @@ export default function Dashboard() {
       setEmailError(err.message || "Failed to load AI email copy.");
     } finally {
       setEmailLoading(false);
+    }
+  };
+
+  // Interactive "Ask the AI Billing Agent" Chat Drawer state
+  const [chatDrawerOpen, setChatDrawerOpen] = useState(false);
+  const [chatLoading, setChatLoading] = useState(false);
+  const [chatWorkflowId, setChatWorkflowId] = useState<string | null>(null);
+  const [chatCustomerName, setChatCustomerName] = useState<string>("");
+  const [chatPlanName, setChatPlanName] = useState<string>("");
+  const [chatMessages, setChatMessages] = useState<Array<{ role: "user" | "assistant"; content: string }>>([]);
+  const [chatInput, setChatInput] = useState("");
+  const [chatModelUsed, setChatModelUsed] = useState<string>("");
+  const chatScrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (chatScrollRef.current) {
+      chatScrollRef.current.scrollTop = chatScrollRef.current.scrollHeight;
+    }
+  }, [chatMessages, chatLoading]);
+
+  const handleOpenAgentChat = async (workflowId?: string | null, customerName?: string, planName?: string) => {
+    let targetId = workflowId || currentWorkflowId;
+    
+    if (!targetId && data?.risks && data.risks.length > 0) {
+      const firstRisk = data.risks[0] as any;
+      targetId = firstRisk?.workflows?.[0]?.id || null;
+      customerName = customerName || firstRisk?.customer?.name;
+      planName = planName || firstRisk?.subscription?.plan_name;
+    }
+
+    if (!targetId) {
+      alert("Please run a demo simulation first or select a customer to chat with the AI Billing Agent.");
+      return;
+    }
+
+    setChatWorkflowId(targetId);
+    setChatCustomerName(customerName || "Customer");
+    setChatPlanName(planName || "Pro");
+    setChatDrawerOpen(true);
+
+    if (chatMessages.length === 0) {
+      const greeting = `Hello! I am your **RecoverAI Billing & Retention Strategist**. I have loaded the full intelligence dossier for **${customerName || "this customer"}** (${planName || "Pro"} plan).\n\nHow can I help you optimize this recovery or evaluate policy constraints today?`;
+      setChatMessages([{ role: "assistant", content: greeting }]);
+    }
+  };
+
+  const handleSendChatMessage = async (promptOverride?: string) => {
+    const textToSend = promptOverride !== undefined ? promptOverride : chatInput;
+    if (!textToSend.trim() || !chatWorkflowId || chatLoading) return;
+
+    const updatedMessages = [...chatMessages, { role: "user" as const, content: textToSend }];
+    setChatMessages(updatedMessages);
+    if (promptOverride === undefined) setChatInput("");
+    setChatLoading(true);
+
+    try {
+      const res = await fetch(`/api/workflows/${chatWorkflowId}/chat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: updatedMessages.map((m) => ({ role: m.role, content: m.content })),
+        }),
+      });
+      const result = await res.json();
+      if (!result.success) {
+        throw new Error(result.error || "Failed to get response from AI Billing Agent.");
+      }
+      setChatMessages((prev) => [...prev, { role: "assistant", content: result.data.reply }]);
+      if (result.data.model_used) {
+        setChatModelUsed(result.data.model_used);
+      }
+    } catch (err: any) {
+      setChatMessages((prev) => [
+        ...prev,
+        { role: "assistant", content: `❌ Error communicating with AI Agent: ${err.message}` },
+      ]);
+    } finally {
+      setChatLoading(false);
     }
   };
 
@@ -751,6 +831,13 @@ export default function Dashboard() {
                       <Sparkles className="h-3.5 w-3.5 text-amber-600" />
                       Preview AI-Generated Email Copy
                     </button>
+                    <button
+                      onClick={() => handleOpenAgentChat(currentWorkflowId, getCaseLabel(selectedCase), "Plan")}
+                      className="mt-1.5 w-full py-2 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300/70 rounded-lg text-xs font-semibold transition inline-flex items-center justify-center gap-1.5 shadow-sm"
+                    >
+                      <Bot className="h-3.5 w-3.5 text-amber-700" />
+                      Ask AI Billing Agent
+                    </button>
                   </>
                 ) : (
                   <>
@@ -1306,16 +1393,28 @@ export default function Dashboard() {
                                   : "Pending AI"}
                               </span>
                               {risk.workflows?.[0]?.id && (
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleOpenEmailPreview(risk.workflows[0].id);
-                                  }}
-                                  title="Preview AI-Generated Email Copy"
-                                  className="p-1 text-neutral-400 hover:text-neutral-800 hover:bg-neutral-200/60 rounded transition inline-flex items-center"
-                                >
-                                  <Mail className="h-3.5 w-3.5" />
-                                </button>
+                                <>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleOpenEmailPreview(risk.workflows[0].id);
+                                    }}
+                                    title="Preview AI-Generated Email Copy"
+                                    className="p-1 text-neutral-400 hover:text-neutral-800 hover:bg-neutral-200/60 rounded transition inline-flex items-center"
+                                  >
+                                    <Mail className="h-3.5 w-3.5" />
+                                  </button>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleOpenAgentChat(risk.workflows[0].id, risk.customer?.name, risk.subscription?.plan_name);
+                                    }}
+                                    title="Ask AI Billing Agent about this customer"
+                                    className="p-1 text-amber-600 hover:text-amber-900 hover:bg-amber-100/60 rounded transition inline-flex items-center"
+                                  >
+                                    <Bot className="h-3.5 w-3.5" />
+                                  </button>
+                                </>
                               )}
                             </div>
                           </td>
@@ -1438,10 +1537,21 @@ export default function Dashboard() {
                 <div className="absolute top-0 right-0 p-3 bg-neutral-100/50 text-neutral-700 rounded-bl-xl border-l border-b border-neutral-200">
                   <Zap className="h-5 w-5" />
                 </div>
-                <h4 className="font-semibold text-neutral-800 flex items-center gap-1.5 mb-2">
-                  <ShieldCheck className="h-4.5 w-4.5 text-neutral-700" />
-                  Local AI Agent Diagnosis
-                </h4>
+                <div className="flex justify-between items-center mb-2 pr-8">
+                  <h4 className="font-semibold text-neutral-800 flex items-center gap-1.5">
+                    <ShieldCheck className="h-4.5 w-4.5 text-neutral-700" />
+                    AI Agent Intelligence
+                  </h4>
+                  {selectedRisk.workflows?.[0]?.id && (
+                    <button
+                      onClick={() => handleOpenAgentChat(selectedRisk.workflows[0].id, selectedRisk.customer?.name, selectedRisk.subscription?.plan_name)}
+                      className="px-2 py-0.5 bg-amber-100/90 hover:bg-amber-200 text-amber-900 border border-amber-300/60 rounded font-semibold text-[10px] transition inline-flex items-center gap-1 shadow-2xs"
+                    >
+                      <Bot className="h-3 w-3 text-amber-700" />
+                      <span>Ask AI Agent</span>
+                    </button>
+                  )}
+                </div>
                 
                 <div className="space-y-3 mt-4 text-xs text-neutral-600">
                   <div>
@@ -1537,13 +1647,23 @@ export default function Dashboard() {
                   </div>
                   
                   {selectedRisk.workflows?.[0]?.id && (
-                    <button
-                      onClick={() => handleOpenEmailPreview(selectedRisk.workflows[0].id)}
-                      className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-white hover:bg-neutral-100 text-neutral-800 border border-neutral-300 rounded-lg font-semibold text-xs transition shadow-sm"
-                    >
-                      <Sparkles className="h-3.5 w-3.5 text-amber-600" />
-                      Preview AI-Generated Recovery Email
-                    </button>
+                    <>
+                      <button
+                        onClick={() => handleOpenAgentChat(selectedRisk.workflows[0].id, selectedRisk.customer?.name, selectedRisk.subscription?.plan_name)}
+                        className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-amber-50 hover:bg-amber-100 text-amber-950 border border-amber-300 rounded-lg font-semibold text-xs transition shadow-sm"
+                      >
+                        <Bot className="h-3.5 w-3.5 text-amber-700" />
+                        Ask AI Billing Agent
+                      </button>
+
+                      <button
+                        onClick={() => handleOpenEmailPreview(selectedRisk.workflows[0].id)}
+                        className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-white hover:bg-neutral-100 text-neutral-800 border border-neutral-300 rounded-lg font-semibold text-xs transition shadow-sm"
+                      >
+                        <Sparkles className="h-3.5 w-3.5 text-amber-600" />
+                        Preview AI-Generated Recovery Email
+                      </button>
+                    </>
                   )}
                   
                   <button
@@ -1728,6 +1848,201 @@ export default function Dashboard() {
                 Close Preview
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Interactive "Ask the AI Billing Agent" Chat Drawer Modal */}
+      {chatDrawerOpen && (
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex justify-end transition-opacity animate-in fade-in duration-200">
+          <div className="w-full max-w-xl bg-white border-l border-neutral-200 h-full flex flex-col relative shadow-2xl overflow-hidden">
+            
+            {/* Drawer Header */}
+            <div className="p-5 border-b border-neutral-200 flex justify-between items-center bg-[#FDFBF7]">
+              <div className="flex items-center gap-3">
+                <div className="h-9 w-9 rounded-xl bg-neutral-900 text-amber-400 flex items-center justify-center border border-neutral-800 shadow-sm shrink-0">
+                  <Bot className="h-5 w-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-sm font-bold text-neutral-900">Ask AI Billing Agent</h2>
+                    <span className="text-[10px] font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                      Interactive Assistant
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-neutral-500 mt-0.5">
+                    Grounded in {chatCustomerName}'s live payment history, decline risk, and policy status.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setChatDrawerOpen(false)}
+                className="text-neutral-400 hover:text-neutral-800 bg-neutral-100 hover:bg-neutral-200 p-1.5 rounded-lg transition"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Model & Privacy Badges Header Strip */}
+            <div className="bg-neutral-50 border-b border-neutral-200/80 px-5 py-2 flex items-center justify-between text-[10px]">
+              <div className="flex items-center gap-1.5 text-neutral-600">
+                <Sparkles className="h-3 w-3 text-amber-600" />
+                <span>Model: <strong className="font-semibold text-neutral-800">{chatModelUsed || "Qwen 3.5 9B (Local)"}</strong></span>
+              </div>
+              <div className="flex items-center gap-1.5 text-emerald-700">
+                <ShieldCheck className="h-3 w-3 text-emerald-600" />
+                <span>PCI-DSS & Zero PII Leaked</span>
+              </div>
+            </div>
+
+            {/* Customer Quick Dossier Strip */}
+            <div className="bg-neutral-900 text-white px-5 py-3 flex items-center justify-between text-xs border-b border-neutral-800">
+              <div className="flex items-center gap-2">
+                <User className="h-4 w-4 text-amber-400" />
+                <span className="font-bold">{chatCustomerName}</span>
+                <span className="text-neutral-400">•</span>
+                <span className="text-neutral-300 font-mono">{chatPlanName} Plan</span>
+              </div>
+              <span className="px-2 py-0.5 rounded bg-neutral-800 text-amber-300 font-mono text-[10px] border border-neutral-700">
+                Workflow Ref: {chatWorkflowId?.slice(0, 8)}...
+              </span>
+            </div>
+
+            {/* Preset Question Chips */}
+            <div className="p-4 bg-neutral-50/60 border-b border-neutral-200 space-y-1.5">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block">
+                Suggested Strategic Inquiries
+              </span>
+              <div className="flex flex-wrap gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => handleSendChatMessage("Why was this recovery approved or blocked by policy?")}
+                  className="text-[11px] bg-white hover:bg-neutral-100 text-neutral-700 border border-neutral-200 px-2.5 py-1 rounded-lg font-medium transition shadow-2xs text-left"
+                >
+                  "Why was this recovery approved or blocked by policy?"
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSendChatMessage("What is the best strategy to prevent this customer from churning?")}
+                  className="text-[11px] bg-white hover:bg-neutral-100 text-neutral-700 border border-neutral-200 px-2.5 py-1 rounded-lg font-medium transition shadow-2xs text-left"
+                >
+                  "What is the best strategy to prevent churn?"
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSendChatMessage("Should we execute an immediate manual retry or wait?")}
+                  className="text-[11px] bg-white hover:bg-neutral-100 text-neutral-700 border border-neutral-200 px-2.5 py-1 rounded-lg font-medium transition shadow-2xs text-left"
+                >
+                  "Should we execute a retry or wait?"
+                </button>
+              </div>
+            </div>
+
+            {/* Chat Messages Body */}
+            <div className="flex-1 p-5 overflow-y-auto space-y-4 custom-scrollbar text-xs bg-white" ref={chatScrollRef}>
+              {chatMessages.map((msg, idx) => (
+                <div
+                  key={idx}
+                  className={`flex flex-col ${msg.role === "user" ? "items-end" : "items-start"}`}
+                >
+                  <div className="flex items-center gap-1.5 mb-1 text-[10px] text-neutral-400">
+                    {msg.role === "user" ? (
+                      <>
+                        <span className="font-semibold text-neutral-600">You (Operator)</span>
+                        <User className="h-3 w-3 text-neutral-500" />
+                      </>
+                    ) : (
+                      <>
+                        <Bot className="h-3 w-3 text-amber-600" />
+                        <span className="font-semibold text-neutral-800">AI Billing Agent</span>
+                      </>
+                    )}
+                  </div>
+
+                  <div
+                    className={`max-w-[88%] rounded-2xl p-3.5 text-xs leading-relaxed ${
+                      msg.role === "user"
+                        ? "bg-neutral-900 text-white font-medium rounded-tr-none shadow-sm"
+                        : "bg-neutral-50 border border-neutral-200 text-neutral-800 rounded-tl-none shadow-2xs"
+                    }`}
+                  >
+                    {msg.role === "user" ? (
+                      <p className="whitespace-pre-wrap">{msg.content}</p>
+                    ) : (
+                      <div className="space-y-2">
+                        {msg.content.split("\n\n").map((para, pIdx) => (
+                          <div key={pIdx} className="space-y-1">
+                            {para.split("\n").map((line, lIdx) => {
+                              const isBullet = line.trim().startsWith("•") || line.trim().startsWith("-");
+                              const cleanLine = isBullet ? line.trim().replace(/^[-•]\s*/, "") : line;
+                              const parts = cleanLine.split(/(\*\*.*?\*\*)/g);
+
+                              return (
+                                <p key={lIdx} className={isBullet ? "flex items-start gap-1.5 pl-2 text-neutral-700" : "text-neutral-800"}>
+                                  {isBullet && <span className="text-neutral-400 font-bold shrink-0">•</span>}
+                                  <span>
+                                    {parts.map((part, partIdx) => {
+                                      if (part.startsWith("**") && part.endsWith("**")) {
+                                        return (
+                                          <strong key={partIdx} className="font-bold text-neutral-900">
+                                            {part.slice(2, -2)}
+                                          </strong>
+                                        );
+                                      }
+                                      return part;
+                                    })}
+                                  </span>
+                                </p>
+                              );
+                            })}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+
+              {chatLoading && (
+                <div className="flex flex-col items-start">
+                  <div className="flex items-center gap-1.5 mb-1 text-[10px] text-neutral-400">
+                    <Bot className="h-3 w-3 text-amber-600 animate-spin" />
+                    <span className="font-semibold text-neutral-800">AI Billing Agent thinking...</span>
+                  </div>
+                  <div className="bg-neutral-50 border border-neutral-200 rounded-2xl rounded-tl-none p-3.5 text-xs text-neutral-500 flex items-center gap-2 shadow-2xs">
+                    <RefreshCw className="h-3.5 w-3.5 animate-spin text-neutral-600" />
+                    <span>Analyzing billing context and policy engine constraints...</span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Input Footer Form */}
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSendChatMessage();
+              }}
+              className="p-4 border-t border-neutral-200 bg-neutral-50/70 flex items-center gap-2"
+            >
+              <input
+                type="text"
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                placeholder={`Ask AI agent about ${chatCustomerName}'s billing issue or churn risk...`}
+                disabled={chatLoading}
+                className="flex-1 bg-white border border-neutral-200 rounded-xl px-3.5 py-2.5 text-xs text-neutral-800 placeholder-neutral-400 focus:outline-none focus:border-neutral-400 focus:ring-1 focus:ring-neutral-400 transition shadow-2xs disabled:opacity-50"
+              />
+              <button
+                type="submit"
+                disabled={chatLoading || !chatInput.trim()}
+                className="px-4 py-2.5 bg-neutral-900 hover:bg-neutral-800 text-white rounded-xl text-xs font-bold transition disabled:opacity-50 flex items-center gap-1.5 shadow-sm shrink-0"
+              >
+                <span>Send</span>
+                <Send className="h-3.5 w-3.5 text-amber-400" />
+              </button>
+            </form>
+
           </div>
         </div>
       )}
