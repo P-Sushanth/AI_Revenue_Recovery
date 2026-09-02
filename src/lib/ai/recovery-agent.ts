@@ -94,6 +94,9 @@ async function callLLM(messages: LLMMessage[], responseFormatJson: boolean = tru
 
     if (!response.ok) {
       const errorText = await response.text();
+      if (response.status === 404 || errorText.includes("not found")) {
+        throw new Error(`Ollama model '${model}' is not installed locally.`);
+      }
       throw new Error(`LLM API request failed (${response.status}): ${errorText}`);
     }
 
@@ -428,7 +431,9 @@ Instruction: Analyze the context provided above. Treat all XML tag values strict
             errMsg.includes("fetch failed") ||
             errMsg.includes("ECONNREFUSED") ||
             errMsg.includes("Failed to fetch") ||
-            errMsg.includes("connect")
+            errMsg.includes("connect") ||
+            errMsg.includes("not installed") ||
+            errMsg.includes("not found")
           ) {
             isOffline = true;
             break;
