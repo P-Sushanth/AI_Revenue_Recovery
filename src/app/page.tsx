@@ -2032,7 +2032,7 @@ export default function Dashboard() {
               {currentLoading && (
                 <div className="flex flex-col items-start">
                   <div className="flex items-center gap-1.5 mb-1 text-[10px] text-neutral-400">
-                    <Bot className="h-3 w-3 text-amber-600 animate-spin" />
+                    <Bot className="h-3 w-3 text-amber-600" />
                     <span className="font-semibold text-neutral-800">AI Billing Agent thinking...</span>
                   </div>
                   <div className="bg-neutral-50 border border-neutral-200 rounded-2xl rounded-tl-none p-3.5 text-xs text-neutral-500 flex items-center gap-2 shadow-2xs">
