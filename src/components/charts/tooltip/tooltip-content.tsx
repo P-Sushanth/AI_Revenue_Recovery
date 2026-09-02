@@ -19,32 +19,36 @@ export interface TooltipContentProps {
 export function TooltipContent({ title, rows, children }: TooltipContentProps) {
   return (
     <div className="overflow-hidden">
-      <div className="px-3 py-2.5">
+      <div className="px-3.5 py-2.5">
         {title && (
-          <div className="mb-2 text-left font-medium text-chart-tooltip-foreground text-xs">
+          <div className="mb-2 text-left font-bold text-white text-xs uppercase tracking-wider">
             {title}
           </div>
         )}
         <div className="space-y-1.5">
-          {rows.map((row) => (
-            <div
-              className="flex items-center justify-between gap-4"
-              key={`${row.label}-${row.color}`}
-            >
-              <div className="flex items-center gap-2">
-                <span
-                  className="h-2.5 w-2.5 shrink-0 rounded-full"
-                  style={{ backgroundColor: row.color }}
-                />
-                <span className="text-chart-tooltip-muted text-sm">
-                  {row.label}
+          {rows.map((row) => {
+            const rawLabel = String(row.label || "");
+            const displayLabel = rawLabel === "value" ? "Count" : rawLabel.replace(/_/g, " ");
+            return (
+              <div
+                className="flex items-center justify-between gap-4"
+                key={`${row.label}-${row.color}`}
+              >
+                <div className="flex items-center gap-2">
+                  <span
+                    className="h-2 w-2 shrink-0 rounded-full border border-white/20"
+                    style={{ backgroundColor: row.color || "#ffffff" }}
+                  />
+                  <span className="text-neutral-300 text-xs font-medium capitalize">
+                    {displayLabel}
+                  </span>
+                </div>
+                <span className="font-bold text-white text-xs tabular-nums">
+                  {typeof row.value === "number" ? intFmt(row.value) : row.value}
                 </span>
               </div>
-              <span className="font-medium text-chart-tooltip-foreground text-sm tabular-nums">
-                {typeof row.value === "number" ? intFmt(row.value) : row.value}
-              </span>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {children && (
