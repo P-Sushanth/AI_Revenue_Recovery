@@ -406,7 +406,14 @@ export default function Dashboard() {
     setSeeding(true);
     try {
       const res = await fetch("/api/demo/seed", { method: "POST" });
-      const result = await res.json();
+      let result: any = null;
+      try {
+        const text = await res.text();
+        result = text ? JSON.parse(text) : {};
+      } catch (e) {
+        throw new Error(`Server returned status ${res.status}. Seeding operation may take a moment to complete. Please try refreshing.`);
+      }
+
       if (result.success) {
         alert("Database seeded successfully with customer profiles!");
         setDemoStep(0);
@@ -415,7 +422,7 @@ export default function Dashboard() {
         setPolicyRejected(false);
         fetchData(false);
       } else {
-        alert("Seeding failed: " + result.message);
+        alert("Seeding failed: " + (result.message || result.error?.message || "Unexpected error"));
       }
     } catch (err: any) {
       alert("Error seeding: " + err.message);
