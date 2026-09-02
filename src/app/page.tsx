@@ -244,7 +244,7 @@ export default function Dashboard() {
     // Initialize isolated conversation history for this targetId if not present
     setChatHistories((prev) => {
       if (prev[key]) return prev;
-      const greeting = `Hello! I am your **RecoverAI Billing & Retention Strategist**. I have loaded the full intelligence dossier for **${cleanCustomerName}** (${cleanPlanName} plan).\n\nHow can I help you optimize this recovery or evaluate policy constraints today?`;
+      const greeting = `Hi! How can I assist with **${cleanCustomerName}**'s billing recovery today?`;
       return {
         ...prev,
         [key]: [{ role: "assistant", content: greeting }],
@@ -1546,8 +1546,14 @@ export default function Dashboard() {
 
       {/* Drawer: Detailed Workflow view */}
       {selectedRisk && (
-        <div className="fixed inset-0 z-50 bg-black/30 backdrop-blur-sm flex justify-end transition-opacity">
-          <div className="w-full max-w-xl bg-white border-l border-neutral-200 h-full overflow-y-auto flex flex-col relative shadow-2xl">
+        <div
+          onClick={() => setSelectedRisk(null)}
+          className="fixed inset-0 z-50 bg-black/30 backdrop-blur-sm flex justify-end transition-opacity"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-xl bg-white border-l border-neutral-200 h-full overflow-y-auto flex flex-col relative shadow-2xl"
+          >
 
             {/* Drawer Header */}
             <div className="p-6 border-b border-neutral-200 flex justify-between items-center bg-neutral-50/50">
@@ -1723,8 +1729,14 @@ export default function Dashboard() {
 
       {/* AI-Generated Recovery Email Modal */}
       {emailDrawerOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white border border-neutral-200 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+        <div
+          onClick={() => setEmailDrawerOpen(false)}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white border border-neutral-200 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+          >
             {/* Modal Header */}
             <div className="px-6 py-4 border-b border-neutral-100 flex justify-between items-center bg-[#FDFBF7]">
               <div className="flex items-center gap-3">
@@ -1892,8 +1904,14 @@ export default function Dashboard() {
 
       {/* Interactive "Ask the AI Billing Agent" Chat Drawer Modal */}
       {chatDrawerOpen && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex justify-end transition-opacity animate-in fade-in duration-200">
-          <div className="w-full max-w-xl bg-white border-l border-neutral-200 h-full flex flex-col relative shadow-2xl overflow-hidden">
+        <div
+          onClick={() => setChatDrawerOpen(false)}
+          className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex justify-end transition-opacity animate-in fade-in duration-200"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-xl bg-white border-l border-neutral-200 h-full flex flex-col relative shadow-2xl overflow-hidden"
+          >
             
             {/* Drawer Header */}
             <div className="p-5 border-b border-neutral-200 flex justify-between items-center bg-[#FDFBF7]">
@@ -1909,7 +1927,7 @@ export default function Dashboard() {
                     </span>
                   </div>
                   <p className="text-[11px] text-neutral-500 mt-0.5">
-                    Grounded in {chatCustomerName}'s live payment history, decline risk, and policy status.
+                    Live Dossier • {chatCustomerName} ({chatPlanName} plan)
                   </p>
                 </div>
               </div>
