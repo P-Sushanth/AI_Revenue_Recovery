@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import {
   AlertTriangle,
   CheckCircle,
@@ -184,20 +184,30 @@ export default function Dashboard() {
 
   // Interactive "Ask the AI Billing Agent" Chat Drawer state
   const [chatDrawerOpen, setChatDrawerOpen] = useState(false);
-  const [chatLoading, setChatLoading] = useState(false);
+  const [chatHistories, setChatHistories] = useState<Record<string, Array<{ role: "user" | "assistant"; content: string }>>>({});
+  const [chatLoadingStates, setChatLoadingStates] = useState<Record<string, boolean>>({});
   const [chatWorkflowId, setChatWorkflowId] = useState<string | null>(null);
   const [chatCustomerName, setChatCustomerName] = useState<string>("");
   const [chatPlanName, setChatPlanName] = useState<string>("");
-  const [chatMessages, setChatMessages] = useState<Array<{ role: "user" | "assistant"; content: string }>>([]);
   const [chatInput, setChatInput] = useState("");
   const [chatModelUsed, setChatModelUsed] = useState<string>("");
   const chatScrollRef = useRef<HTMLDivElement>(null);
+
+  const currentMessages = useMemo(() => {
+    if (!chatWorkflowId) return [];
+    return chatHistories[chatWorkflowId] || [];
+  }, [chatHistories, chatWorkflowId]);
+
+  const currentLoading = useMemo(() => {
+    if (!chatWorkflowId) return false;
+    return !!chatLoadingStates[chatWorkflowId];
+  }, [chatLoadingStates, chatWorkflowId]);
 
   useEffect(() => {
     if (chatScrollRef.current) {
       chatScrollRef.current.scrollTop = chatScrollRef.current.scrollHeight;
     }
-  }, [chatMessages, chatLoading]);
+  }, [currentMessages, currentLoading]);
 
   const handleOpenAgentChat = async (workflowId?: string | null, customerName?: string, planName?: string) => {
     let targetId = workflowId || currentWorkflowId;
@@ -224,29 +234,46 @@ export default function Dashboard() {
 
     const cleanCustomerName = (customerName || "Customer").split("(")[0].trim();
     const cleanPlanName = (planName || "Pro").split("(")[0].trim();
+    const key = targetId || "demo-workflow";
 
-    setChatWorkflowId(targetId || "demo-workflow");
+    setChatWorkflowId(key);
     setChatCustomerName(cleanCustomerName || "Customer");
     setChatPlanName(cleanPlanName || "Pro");
     setChatDrawerOpen(true);
 
-    if (chatMessages.length === 0) {
+    // Initialize isolated conversation history for this targetId if not present
+    setChatHistories((prev) => {
+      if (prev[key]) return prev;
       const greeting = `Hello! I am your **RecoverAI Billing & Retention Strategist**. I have loaded the full intelligence dossier for **${cleanCustomerName}** (${cleanPlanName} plan).\n\nHow can I help you optimize this recovery or evaluate policy constraints today?`;
-      setChatMessages([{ role: "assistant", content: greeting }]);
-    }
+      return {
+        ...prev,
+        [key]: [{ role: "assistant", content: greeting }],
+      };
+    });
   };
 
   const handleSendChatMessage = async (promptOverride?: string) => {
     const textToSend = promptOverride !== undefined ? promptOverride : chatInput;
-    if (!textToSend.trim() || !chatWorkflowId || chatLoading) return;
+    const targetKey = chatWorkflowId;
+    if (!textToSend.trim() || !targetKey || chatLoadingStates[targetKey]) return;
 
-    const updatedMessages = [...chatMessages, { role: "user" as const, content: textToSend }];
-    setChatMessages(updatedMessages);
+    const existingMessages = chatHistories[targetKey] || [];
+    const updatedMessages = [...existingMessages, { role: "user" as const, content: textToSend }];
+
+    // Isolated state update for this target customer workflow
+    setChatHistories((prev) => ({
+      ...prev,
+      [targetKey]: updatedMessages,
+    }));
     if (promptOverride === undefined) setChatInput("");
-    setChatLoading(true);
+
+    setChatLoadingStates((prev) => ({
+      ...prev,
+      [targetKey]: true,
+    }));
 
     try {
-      const res = await fetch(`/api/workflows/${chatWorkflowId}/chat`, {
+      const res = await fetch(`/api/workflows/${targetKey}/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -257,17 +284,26 @@ export default function Dashboard() {
       if (!result.success) {
         throw new Error(result.error || "Failed to get response from AI Billing Agent.");
       }
-      setChatMessages((prev) => [...prev, { role: "assistant", content: result.data.reply }]);
+      setChatHistories((prev) => ({
+        ...prev,
+        [targetKey]: [...(prev[targetKey] || updatedMessages), { role: "assistant", content: result.data.reply }],
+      }));
       if (result.data.model_used) {
         setChatModelUsed(result.data.model_used);
       }
     } catch (err: any) {
-      setChatMessages((prev) => [
+      setChatHistories((prev) => ({
         ...prev,
-        { role: "assistant", content: `❌ Error communicating with AI Agent: ${err.message}` },
-      ]);
+        [targetKey]: [
+          ...(prev[targetKey] || updatedMessages),
+          { role: "assistant", content: `❌ Error communicating with AI Agent: ${err.message}` },
+        ],
+      }));
     } finally {
-      setChatLoading(false);
+      setChatLoadingStates((prev) => ({
+        ...prev,
+        [targetKey]: false,
+      }));
     }
   };
 
@@ -1942,7 +1978,7 @@ export default function Dashboard() {
 
             {/* Chat Messages Body */}
             <div className="flex-1 p-5 overflow-y-auto space-y-4 custom-scrollbar text-xs bg-white" ref={chatScrollRef}>
-              {chatMessages.map((msg, idx) => (
+              {currentMessages.map((msg: { role: "user" | "assistant"; content: string }, idx: number) => (
                 <div
                   key={idx}
                   className={`flex flex-col ${msg.role === "user" ? "items-end" : "items-start"}`}
@@ -1972,9 +2008,9 @@ export default function Dashboard() {
                       <p className="whitespace-pre-wrap">{msg.content}</p>
                     ) : (
                       <div className="space-y-2">
-                        {msg.content.split("\n\n").map((para, pIdx) => (
+                        {msg.content.split("\n\n").map((para: string, pIdx: number) => (
                           <div key={pIdx} className="space-y-1">
-                            {para.split("\n").map((line, lIdx) => {
+                            {para.split("\n").map((line: string, lIdx: number) => {
                               const isBullet = line.trim().startsWith("•") || line.trim().startsWith("-");
                               const cleanLine = isBullet ? line.trim().replace(/^[-•]\s*/, "") : line;
                               const parts = cleanLine.split(/(\*\*.*?\*\*)/g);
@@ -1983,7 +2019,7 @@ export default function Dashboard() {
                                 <p key={lIdx} className={isBullet ? "flex items-start gap-1.5 pl-2 text-neutral-700" : "text-neutral-800"}>
                                   {isBullet && <span className="text-neutral-400 font-bold shrink-0">•</span>}
                                   <span>
-                                    {parts.map((part, partIdx) => {
+                                    {parts.map((part: string, partIdx: number) => {
                                       if (part.startsWith("**") && part.endsWith("**")) {
                                         return (
                                           <strong key={partIdx} className="font-bold text-neutral-900">
@@ -2005,7 +2041,7 @@ export default function Dashboard() {
                 </div>
               ))}
 
-              {chatLoading && (
+              {currentLoading && (
                 <div className="flex flex-col items-start">
                   <div className="flex items-center gap-1.5 mb-1 text-[10px] text-neutral-400">
                     <Bot className="h-3 w-3 text-amber-600 animate-spin" />
@@ -2032,12 +2068,12 @@ export default function Dashboard() {
                 value={chatInput}
                 onChange={(e) => setChatInput(e.target.value)}
                 placeholder={`Ask AI agent about ${chatCustomerName}'s billing issue or churn risk...`}
-                disabled={chatLoading}
+                disabled={currentLoading}
                 className="flex-1 bg-white border border-neutral-200 rounded-xl px-3.5 py-2.5 text-xs text-neutral-800 placeholder-neutral-400 focus:outline-none focus:border-neutral-400 focus:ring-1 focus:ring-neutral-400 transition shadow-2xs disabled:opacity-50"
               />
               <button
                 type="submit"
-                disabled={chatLoading || !chatInput.trim()}
+                disabled={currentLoading || !chatInput.trim()}
                 className="px-4 py-2.5 bg-neutral-900 hover:bg-neutral-800 text-white rounded-xl text-xs font-bold transition disabled:opacity-50 flex items-center gap-1.5 shadow-sm shrink-0"
               >
                 <span>Send</span>
