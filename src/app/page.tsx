@@ -169,10 +169,9 @@ export default function Dashboard() {
     setEmailError(null);
 
     try {
-      const res = await fetch(`/api/workflows/${targetId}/email-preview`);
-      const result = await res.json();
+      const result = await safeFetchJson(`/api/workflows/${targetId}/email-preview`);
       if (!result.success) {
-        throw new Error(result.error || "Failed to generate AI email preview.");
+        throw new Error(result.error?.message || result.error || "Failed to generate AI email preview.");
       }
       setEmailData(result.data);
     } catch (err: any) {
@@ -280,16 +279,15 @@ export default function Dashboard() {
     }));
 
     try {
-      const res = await fetch(`/api/workflows/${targetKey}/chat`, {
+      const result = await safeFetchJson(`/api/workflows/${targetKey}/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           messages: updatedMessages.map((m) => ({ role: m.role, content: m.content })),
         }),
       });
-      const result = await res.json();
       if (!result.success) {
-        throw new Error(result.error || "Failed to get response from AI Billing Agent.");
+        throw new Error(result.error?.message || result.error || "Failed to get response from AI Billing Agent.");
       }
       setChatHistories((prev) => ({
         ...prev,
@@ -314,11 +312,27 @@ export default function Dashboard() {
     }
   };
 
+  const safeFetchJson = async (url: string, options?: RequestInit) => {
+    try {
+      const res = await fetch(url, options);
+      const text = await res.text();
+      if (!text) {
+        return { success: false, error: { message: `Server returned empty response (${res.status})` } };
+      }
+      try {
+        return JSON.parse(text);
+      } catch (e) {
+        return { success: false, error: { message: `Invalid JSON response from server (${res.status})` } };
+      }
+    } catch (err: any) {
+      return { success: false, error: { message: err.message || "Network request failed" } };
+    }
+  };
+
   const checkSystemHealth = async () => {
     setCheckingHealth(true);
     try {
-      const res = await fetch("/api/demo/health");
-      const result = await res.json();
+      const result = await safeFetchJson("/api/demo/health");
       if (result.success && result.health) {
         setOllamaReachable(result.health.reachable);
         setModelInstalled(result.health.modelAvailable);
@@ -341,8 +355,7 @@ export default function Dashboard() {
   const fetchData = async (showLoading = true) => {
     if (showLoading) setLoading(true);
     try {
-      const response = await fetch("/api/dashboard/metrics");
-      const result = await response.json();
+      const result = await safeFetchJson("/api/dashboard/metrics");
       if (result.success) {
         setData(result.data);
         setError(null);
@@ -361,13 +374,6 @@ export default function Dashboard() {
     checkSystemHealth();
   }, []);
 
-  // Auto-scroll simulation logs
-  useEffect(() => {
-    if (logEndRef.current) {
-      logEndRef.current.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [simulationLogs]);
-
   // Polling for simulation recovery success
   useEffect(() => {
     let intervalId: NodeJS.Timeout | null = null;
@@ -375,13 +381,12 @@ export default function Dashboard() {
     if (demoStep === 5 || demoStep === 6) {
       intervalId = setInterval(async () => {
         try {
-          const response = await fetch("/api/dashboard/metrics");
-          const result = await response.json();
-          if (result.success) {
+          const result = await safeFetchJson("/api/dashboard/metrics");
+          if (result.success && result.data) {
             setData(result.data);
 
             // Check if the current workflow is resolved
-            const currentWorkflow = result.data.risks.find(
+            const currentWorkflow = result.data.risks?.find(
               (r: any) => r.workflows?.[0]?.id === currentWorkflowId
             );
 
