@@ -192,6 +192,13 @@ export default function Dashboard() {
   const [chatInput, setChatInput] = useState("");
   const [chatModelUsed, setChatModelUsed] = useState<string>("");
   const chatScrollRef = useRef<HTMLDivElement>(null);
+  const pipelineLogsRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (pipelineLogsRef.current) {
+      pipelineLogsRef.current.scrollTop = pipelineLogsRef.current.scrollHeight;
+    }
+  }, [simulationLogs]);
 
   const currentMessages = useMemo(() => {
     if (!chatWorkflowId) return [];
@@ -772,21 +779,22 @@ export default function Dashboard() {
         )}
 
         {/* Live Demo wizard checklist */}
-        {demoStep > 0 && (
-          <div className="bg-white border border-neutral-200 rounded-2xl p-6 shadow-sm relative overflow-hidden">
-            <div className="absolute top-0 left-0 right-0 h-1 bg-neutral-900"></div>
-            <div className="flex justify-between items-center mb-5 border-b border-neutral-100 pb-3">
-              <div className="flex items-center gap-2">
-                <span className="h-2 w-2 rounded-full bg-neutral-900 animate-pulse"></span>
-                <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-500">Live Demo Recovery Journey</h3>
-              </div>
+        <div className="bg-white border border-neutral-200 rounded-2xl p-6 shadow-sm relative overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-neutral-900"></div>
+          <div className="flex justify-between items-center mb-5 border-b border-neutral-100 pb-3">
+            <div className="flex items-center gap-2">
+              <span className={`h-2 w-2 rounded-full ${demoStep > 0 ? "bg-emerald-500 animate-pulse" : "bg-neutral-300"}`}></span>
+              <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-500">Live Demo Recovery Journey</h3>
+            </div>
+            {demoStep > 0 && (
               <button
                 onClick={() => { setDemoStep(0); setSimulationLogs([]); }}
-                className="text-neutral-400 hover:text-neutral-700 transition text-xs"
+                className="text-neutral-400 hover:text-neutral-700 transition text-xs font-medium"
               >
                 Clear Demo Run
               </button>
-            </div>
+            )}
+          </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
               {/* Checklist details */}
@@ -854,7 +862,19 @@ export default function Dashboard() {
 
               {/* Interaction details */}
               <div className="lg:col-span-2 bg-neutral-50 border border-neutral-200 rounded-xl p-5 flex flex-col items-center justify-center text-center">
-                {simulating || demoStep < 5 ? (
+                {demoStep === 0 ? (
+                  <div className="py-6 flex flex-col items-center justify-center text-center space-y-3 w-full">
+                    <div className="h-12 w-12 rounded-2xl bg-neutral-100 text-neutral-500 flex items-center justify-center border border-neutral-200 shadow-2xs">
+                      <Zap className="h-6 w-6 text-neutral-700" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-neutral-900 text-sm">Ready for Simulation</h4>
+                      <p className="text-xs text-neutral-500 mt-1 max-w-xs leading-relaxed">
+                        Select a customer scenario from the top bar and click <strong className="text-neutral-800">"Run Demo"</strong> to trigger autonomous recovery.
+                      </p>
+                    </div>
+                  </div>
+                ) : simulating || demoStep < 5 ? (
                   <div className="py-6 flex flex-col items-center justify-center text-center space-y-3 w-full">
                     <div className="h-12 w-12 rounded-2xl bg-neutral-900 text-amber-400 flex items-center justify-center border border-neutral-800 shadow-sm">
                       <RefreshCw className="h-6 w-6 animate-spin" />
@@ -934,20 +954,22 @@ export default function Dashboard() {
             {/* Terminal log panel */}
             <div className="mt-6 border-t border-neutral-100 pt-4 space-y-2">
               <span className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Pipeline logs</span>
-              <div className="font-mono text-xs bg-neutral-50 rounded-lg p-3 max-h-36 overflow-y-auto space-y-1.5 border border-neutral-200 custom-scrollbar text-neutral-600">
-                {simulationLogs.map((log, index) => (
-                  <div key={index} className="flex gap-2">
-                    <span className="text-neutral-400">[{index + 1}]</span>
-                    <span className={log.startsWith("✓") ? "text-emerald-600 font-medium" : log.startsWith("❌") ? "text-rose-600 font-medium" : ""}>
-                      {log}
-                    </span>
-                  </div>
-                ))}
-                <div ref={logEndRef} />
+              <div ref={pipelineLogsRef} className="font-mono text-xs bg-neutral-50 rounded-lg p-3 max-h-36 overflow-y-auto space-y-1.5 border border-neutral-200 custom-scrollbar text-neutral-600">
+                {simulationLogs.length === 0 ? (
+                  <div className="text-neutral-400 italic text-[11px]">[System] Ready for simulation trigger. Select scenario above and click "Run Demo".</div>
+                ) : (
+                  simulationLogs.map((log, index) => (
+                    <div key={index} className="flex gap-2">
+                      <span className="text-neutral-400">[{index + 1}]</span>
+                      <span className={log.startsWith("✓") ? "text-emerald-600 font-medium" : log.startsWith("❌") ? "text-rose-600 font-medium" : ""}>
+                        {log}
+                      </span>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           </div>
-        )}
 
         {/* KPI Cards Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
