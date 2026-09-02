@@ -1801,12 +1801,7 @@ export default function Dashboard() {
                   <Mail className="h-5 w-5" />
                 </div>
                 <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-bold text-neutral-900 text-sm">AI-Generated Recovery Outreach</h3>
-                    <span className="text-[10px] font-semibold text-amber-800 bg-amber-100/80 border border-amber-300/60 px-2 py-0.5 rounded-full">
-                      Dynamic Copy
-                    </span>
-                  </div>
+                  <h3 className="font-bold text-neutral-900 text-sm">AI-Generated Recovery Outreach</h3>
                   <p className="text-neutral-500 text-xs mt-0.5">
                     Synthesized by LLM tailored to customer LTV, plan tier, and failure reason.
                   </p>
@@ -1943,11 +1938,7 @@ export default function Dashboard() {
             </div>
 
             {/* Modal Footer */}
-            <div className="px-6 py-3 border-t border-neutral-100 bg-white flex items-center justify-between">
-              <div className="flex items-center gap-2 text-[11px] text-neutral-500">
-                <ShieldCheck className="h-4 w-4 text-emerald-600" />
-                <span>PCI-DSS & RBI Data Sovereignty Compliant</span>
-              </div>
+            <div className="px-6 py-3 border-t border-neutral-100 bg-white flex items-center justify-end">
               <button
                 onClick={() => setEmailDrawerOpen(false)}
                 className="px-4 py-1.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 rounded-lg text-xs font-semibold transition"
