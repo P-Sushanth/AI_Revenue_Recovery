@@ -1920,12 +1920,7 @@ export default function Dashboard() {
                   <Bot className="h-5 w-5" />
                 </div>
                 <div>
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-sm font-bold text-neutral-900">Ask AI Billing Agent</h2>
-                    <span className="text-[10px] font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
-                      Interactive Assistant
-                    </span>
-                  </div>
+                  <h2 className="text-sm font-bold text-neutral-900">Ask AI Billing Agent</h2>
                   <p className="text-[11px] text-neutral-500 mt-0.5">
                     Live Dossier • {chatCustomerName} ({chatPlanName} plan)
                   </p>
@@ -1937,31 +1932,6 @@ export default function Dashboard() {
               >
                 <X className="h-5 w-5" />
               </button>
-            </div>
-
-            {/* Model & Privacy Badges Header Strip */}
-            <div className="bg-neutral-50 border-b border-neutral-200/80 px-5 py-2 flex items-center justify-between text-[10px]">
-              <div className="flex items-center gap-1.5 text-neutral-600">
-                <Sparkles className="h-3 w-3 text-amber-600" />
-                <span>Model: <strong className="font-semibold text-neutral-800">{chatModelUsed || "Qwen 3.5 9B (Local)"}</strong></span>
-              </div>
-              <div className="flex items-center gap-1.5 text-emerald-700">
-                <ShieldCheck className="h-3 w-3 text-emerald-600" />
-                <span>PCI-DSS & Zero PII Leaked</span>
-              </div>
-            </div>
-
-            {/* Customer Quick Dossier Strip */}
-            <div className="bg-neutral-900 text-white px-5 py-3 flex items-center justify-between text-xs border-b border-neutral-800">
-              <div className="flex items-center gap-2">
-                <User className="h-4 w-4 text-amber-400" />
-                <span className="font-bold">{chatCustomerName}</span>
-                <span className="text-neutral-400">•</span>
-                <span className="text-neutral-300 font-mono">{chatPlanName} Plan</span>
-              </div>
-              <span className="px-2 py-0.5 rounded bg-neutral-800 text-amber-300 font-mono text-[10px] border border-neutral-700">
-                Workflow Ref: {chatWorkflowId?.slice(0, 8)}...
-              </span>
             </div>
 
             {/* Preset Question Chips */}
