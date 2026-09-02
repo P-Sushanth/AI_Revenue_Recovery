@@ -203,21 +203,29 @@ export default function Dashboard() {
     let targetId = workflowId || currentWorkflowId;
 
     if (!targetId && data?.risks && data.risks.length > 0) {
-      const firstRisk = data.risks[0] as any;
-      targetId = firstRisk?.workflows?.[0]?.id || null;
-      customerName = customerName || firstRisk?.customer?.name;
-      planName = planName || firstRisk?.subscription?.plan_name;
+      const cleanSearch = (customerName || "").split("(")[0].trim().toLowerCase();
+      const matchingRisk = data.risks.find((r: any) => r.customer?.name?.toLowerCase().includes(cleanSearch)) || data.risks[0];
+      const wf = matchingRisk?.workflows;
+      targetId = Array.isArray(wf) ? wf[0]?.id : (wf as any)?.id || null;
+      customerName = customerName || matchingRisk?.customer?.name;
+      planName = planName || matchingRisk?.subscription?.plan_name;
     }
 
-    if (!targetId) {
-      alert("Please run a demo simulation first or select a customer to chat with the AI Billing Agent.");
-      return;
+    if (!targetId && data?.risks) {
+      for (const r of data.risks) {
+        const wf = (r as any).workflows;
+        const id = Array.isArray(wf) ? wf[0]?.id : wf?.id;
+        if (id) {
+          targetId = id;
+          break;
+        }
+      }
     }
 
     const cleanCustomerName = (customerName || "Customer").split("(")[0].trim();
     const cleanPlanName = (planName || "Pro").split("(")[0].trim();
 
-    setChatWorkflowId(targetId);
+    setChatWorkflowId(targetId || "demo-workflow");
     setChatCustomerName(cleanCustomerName || "Customer");
     setChatPlanName(cleanPlanName || "Pro");
     setChatDrawerOpen(true);
@@ -1386,36 +1394,41 @@ export default function Dashboard() {
                           <td className="px-4 py-3.5 text-neutral-700 whitespace-nowrap">
                             <div className="inline-flex items-center gap-1.5">
                               <span className="text-[11px] font-medium text-neutral-800 bg-neutral-100 border border-neutral-200/60 px-2 py-0.5 rounded">
-                                {risk.workflows?.[0]?.recommended_action === "send_payment_recovery_email"
+                                {risk.workflows?.[0]?.recommended_action === "send_payment_recovery_email" || (risk.workflows as any)?.recommended_action === "send_payment_recovery_email"
                                   ? "Send Recovery Email"
-                                  : risk.workflows?.[0]?.recommended_action === "no_action"
-                                    ? "No Action"
-                                    : "Pending AI"}
+                                  : risk.workflows?.[0]?.recommended_action === "no_action" || (risk.workflows as any)?.recommended_action === "no_action"
+                                  ? "No Action"
+                                  : "Pending AI"}
                               </span>
-                              {risk.workflows?.[0]?.id && (
-                                <>
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleOpenEmailPreview(risk.workflows[0].id);
-                                    }}
-                                    title="Preview AI-Generated Email Copy"
-                                    className="p-1 text-neutral-400 hover:text-neutral-800 hover:bg-neutral-200/60 rounded transition inline-flex items-center"
-                                  >
-                                    <Mail className="h-3.5 w-3.5" />
-                                  </button>
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleOpenAgentChat(risk.workflows[0].id, risk.customer?.name, risk.subscription?.plan_name);
-                                    }}
-                                    title="Ask AI Billing Agent about this customer"
-                                    className="p-1 text-amber-600 hover:text-amber-900 hover:bg-amber-100/60 rounded transition inline-flex items-center"
-                                  >
-                                    <Bot className="h-3.5 w-3.5" />
-                                  </button>
-                                </>
-                              )}
+                              {(() => {
+                                const wfId = Array.isArray(risk.workflows) ? risk.workflows[0]?.id : (risk.workflows as any)?.id || null;
+                                return (
+                                  <>
+                                    {wfId && (
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleOpenEmailPreview(wfId);
+                                        }}
+                                        title="Preview AI-Generated Email Copy"
+                                        className="p-1 text-neutral-400 hover:text-neutral-800 hover:bg-neutral-200/60 rounded transition inline-flex items-center"
+                                      >
+                                        <Mail className="h-3.5 w-3.5" />
+                                      </button>
+                                    )}
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleOpenAgentChat(wfId, risk.customer?.name, risk.subscription?.plan_name);
+                                      }}
+                                      title="Ask AI Billing Agent about this customer"
+                                      className="p-1 text-amber-600 hover:text-amber-900 hover:bg-amber-100/60 rounded transition inline-flex items-center"
+                                    >
+                                      <Bot className="h-3.5 w-3.5" />
+                                    </button>
+                                  </>
+                                );
+                              })()}
                             </div>
                           </td>
                           <td className="px-4 py-3.5 text-right whitespace-nowrap">
@@ -1543,7 +1556,10 @@ export default function Dashboard() {
                   </h4>
                   {selectedRisk.workflows?.[0]?.id && (
                     <button
-                      onClick={() => handleOpenAgentChat(selectedRisk.workflows[0].id, selectedRisk.customer?.name, selectedRisk.subscription?.plan_name)}
+                      onClick={() => {
+                        const wfId = Array.isArray(selectedRisk.workflows) ? selectedRisk.workflows[0]?.id : (selectedRisk.workflows as any)?.id || null;
+                        handleOpenAgentChat(wfId, selectedRisk.customer?.name, selectedRisk.subscription?.plan_name);
+                      }}
                       className="px-2 py-0.5 bg-amber-100/90 hover:bg-amber-200 text-amber-900 border border-amber-300/60 rounded font-semibold text-[10px] transition inline-flex items-center gap-1 shadow-2xs"
                     >
                       <Bot className="h-3 w-3 text-amber-700" />
@@ -1615,7 +1631,7 @@ export default function Dashboard() {
                     <span className="text-neutral-500 font-medium text-xs">Action Status</span>
                     <span className={`px-2 py-0.5 rounded text-[10px] font-bold border uppercase tracking-wider ${selectedRisk.status === "recovered"
                         ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                        : "bg-neutral-50 text-neutral-700 border border-neutral-200"
+                        : "bg-neutral-50 text-neutral-700 border-neutral-200"
                       }`}>
                       {selectedRisk.status === "recovered" ? "Payment Recovered" : "Automated Recovery Mail Sent"}
                     </span>
