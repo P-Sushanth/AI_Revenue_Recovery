@@ -51,7 +51,7 @@ function sanitizeUntrustedInput(input: string | null | undefined): string {
 async function callLLM(messages: LLMMessage[], responseFormatJson: boolean = true): Promise<string> {
   const provider = process.env.LLM_PROVIDER || "local";
   const model = provider === "local"
-    ? process.env.LOCAL_LLM_MODEL || "qwen3.5:9b"
+    ? process.env.LOCAL_LLM_MODEL || "qwen3.5:2b"
     : "gpt-4o-mini";
 
   const url = provider === "local"
@@ -520,7 +520,7 @@ export async function checkOllamaHealth() {
   const ollamaUrl = process.env.LOCAL_LLM_API_URL || "http://localhost:11434/v1";
   // Strip trailing v1 path to access base api endpoints
   const baseUrl = ollamaUrl.replace(/\/v1\/?$/, "");
-  const targetModel = process.env.LOCAL_LLM_MODEL || "qwen3.5:9b";
+  const targetModel = process.env.LOCAL_LLM_MODEL || "qwen3.5:2b";
 
   try {
     const controller = new AbortController();
@@ -555,7 +555,7 @@ export async function checkOllamaHealth() {
   return {
     reachable: true,
     modelAvailable: true,
-    model: "qwen3.5:9b (Cloud Simulation)",
+    model: "qwen3.5:2b (Cloud Simulation)",
     isHostedDemo: true,
     message: "Cloud Demonstration Mode Active (Autonomous AI Heuristics)",
   };
@@ -813,7 +813,7 @@ Output JSON strictly conforming to the requested schema.`;
 
     return {
       ...emailData,
-      model_used: process.env.LOCAL_LLM_MODEL || "Qwen 3.5 9B (Local)",
+      model_used: process.env.LOCAL_LLM_MODEL || "Qwen 3.5 2B (Local)",
       customer_email: customerEmail,
       customer_name: customerName,
       plan_name: planName,
@@ -1004,7 +1004,7 @@ CRITICAL OUTPUT REQUIREMENTS:
 
     return {
       reply: replyText,
-      model_used: process.env.LOCAL_LLM_MODEL || "Qwen 3.5 9B (Local)",
+      model_used: process.env.LOCAL_LLM_MODEL || "Qwen 3.5 2B (Local)",
     };
   } catch (err: any) {
     console.warn(`Local LLM offline for chat agent (${err.message}). Activating Autonomous Heuristic Chat Engine.`);

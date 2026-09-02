@@ -4,7 +4,7 @@
 [![Live Demo](https://img.shields.io/badge/Live_Demo-Online-emerald?style=for-the-badge&logo=vercel)](https://ai-revenue-recovery.vercel.app)
 
 > [!NOTE]
-> **Live Demo Notice**: The live web deployment allows exploring dashboard metrics, risk scores, demo customer personas, and workflow drawers. Full end-to-end real-time AI bank log diagnosis requires a running local Ollama instance (`qwen3.5:9b`).
+> **Live Demo Notice**: The live web deployment allows exploring dashboard metrics, risk scores, demo customer personas, and workflow drawers. Full end-to-end real-time AI bank log diagnosis requires a running local Ollama instance (`qwen3.5:2b`).
 
 ---
 
@@ -19,7 +19,7 @@ Traditional dunning tools rely on rigid, hardcoded rules that fail to differenti
 The **AI Revenue Recovery Engine** combines deterministic payment event ingestion, an automated risk engine, local LLM diagnosis, policy guardrails, and automated recovery interventions into an end-to-end autonomous pipeline:
 * **Normalizes & Ingests Webhooks**: Processes real-time webhook events from Razorpay and Stripe with strict idempotency.
 * **Calculates Risk & Recoverability Scores**: Computes deterministic risk scores (0–100) and classifies revenue risks into `Critical`, `High`, `Medium`, and `Low`.
-* **Diagnoses via Local AI Agent**: Runs a local Ollama LLM (`qwen3.5:9b`) to parse unstructured bank decline messages, extract root causes, and determine optimal recovery strategies.
+* **Diagnoses via Local AI Agent**: Runs a local Ollama LLM (`qwen3.5:2b`) to parse unstructured bank decline messages, extract root causes, and determine optimal recovery strategies.
 * **Enforces Automated Policy Guardrails**: Validates AI recommendations against deterministic business policies before taking any intervention action (e.g. blocking emails for cancelled accounts).
 * **Executes Automated Interventions**: Dispatches personalized recovery emails containing secure, single-click payment update links (`/update-payment`).
 * **Visualizes Real-Time Metrics**: Renders a warm coffee-themed SaaS dashboard displaying real-time KPI metrics, time-series revenue trends, risk distributions, live system audit logs, and an interactive **Raw Bank Log AI Explainer**.
@@ -29,7 +29,7 @@ The **AI Revenue Recovery Engine** combines deterministic payment event ingestio
 ## 3. What Makes This Different
 * **Unstructured Bank Log Interpretation**: Traditional dunning platforms rely exclusively on standard gateway failure codes. This system uses a local LLM to parse raw, non-standardized bank error messages (e.g., HDFC velocity caps, RBI e-mandate freezes, MCC recurring blocks).
 * **Deterministic Policy Separation**: AI recommendations are treated purely as advisory inputs. An automated policy engine evaluates subscription state, contact history, and business rules before any action is executed.
-* **Privacy & Local LLM Execution**: Runs local inference (`qwen3.5:9b` via Ollama) without transmitting sensitive customer financial details to third-party cloud LLM APIs.
+* **Privacy & Local LLM Execution**: Runs local inference (`qwen3.5:2b` via Ollama) without transmitting sensitive customer financial details to third-party cloud LLM APIs.
 * **Zero-Friction Self-Service Recovery**: Dispatches secure, single-click payment update links (`/update-payment`) allowing customers to resolve payment issues instantly.
 
 ---
@@ -49,7 +49,7 @@ The **AI Revenue Recovery Engine** combines deterministic payment event ingestio
              │ 2. Trigger Recovery Workflow (Status: Pending)
              ▼
 ┌─────────────────────────┐
-│     Local AI Agent      │ -> Runs Ollama (qwen3.5:9b) at temperature 0.0
+│     Local AI Agent      │ -> Runs Ollama (qwen3.5:2b) at temperature 0.0
 │       (Ollama)          │ -> Extracts Technical Root Cause & Customer-Friendly Translation
 └────────────┬────────────┘
              │ 3. Output AI Recommendation (send_payment_recovery_email / no_action)
@@ -86,7 +86,7 @@ The **AI Revenue Recovery Engine** combines deterministic payment event ingestio
 
 ## 6. Engineering Decisions
 
-* **Local LLM Inference over Cloud APIs**: Selected local Ollama (`qwen3.5:9b`) execution to process sensitive raw payment logs without transmitting financial data to external cloud providers.
+* **Local LLM Inference over Cloud APIs**: Selected local Ollama (`qwen3.5:2b`) execution to process sensitive raw payment logs without transmitting financial data to external cloud providers.
 * **Deterministic Policy Engine Gate**: AI recommendations are treated as advisory inputs. An automated policy engine evaluates subscription status and contact history before any recovery action is dispatched.
 * **Decoupled Gateway Adapters**: Implemented standard parser interfaces mapping provider-specific webhook payloads (Razorpay, Stripe) into a unified domain schema.
 * **Idempotent Event Ingestion**: Utilized unique event hashes and database constraints to prevent duplicate processing of re-sent webhooks.
@@ -119,7 +119,7 @@ The **AI Revenue Recovery Engine** combines deterministic payment event ingestio
 │          SUPABASE POSTGRES DB          │ │          OLLAMA             │
 │                                        │ │   http://localhost:11434    │
 │  - customers & subscriptions           │ │                             │
-│  - payment_events & revenue_risks      │ │   Model: qwen3.5:9b         │
+│  - payment_events & revenue_risks      │ │   Model: qwen3.5:2b         │
 │  - recovery_workflows & audit_logs     │ │   Temperature: 0.0          │
 └────────────────────────────────────────┘ └─────────────────────────────┘
 ```
@@ -131,7 +131,7 @@ The **AI Revenue Recovery Engine** combines deterministic payment event ingestio
 * **Styling**: Vanilla CSS, Tailwind CSS v4, Lucide Icons, Custom Coffee Light Design Token System (`#F7F2EC`)
 * **Typography**: Google Fonts — **Outfit** (Headings/UI) & **JetBrains Mono** (Metrics/Code/Logs)
 * **Database & Auth**: Supabase (PostgreSQL, Row-Level Security, Real-time client)
-* **AI & Inference**: Ollama (`qwen3.5:9b` running locally) with Zod structural response parsing
+* **AI & Inference**: Ollama (`qwen3.5:2b` running locally) with Zod structural response parsing
 * **Data Validation**: Zod runtime schemas for database, payment payloads, and LLM responses
 * **Testing**: Vitest & Vite tsconfig paths (Unit and Integration test suites)
 * **Payment Adapters**: Razorpay & Stripe SDK Webhook Parsers with HMAC Signature Verification
@@ -176,7 +176,7 @@ The system includes 9 pre-seeded demo customer scenarios covering all risk score
 * **Node.js**: v18.0.0 or higher
 * **Ollama**: Installed locally ([ollama.com](https://ollama.com)) with the Qwen model pulled:
   ```bash
-  ollama pull qwen3.5:9b
+  ollama pull qwen3.5:2b
   ```
 * **Supabase Account**: A PostgreSQL instance with the schema applied from [`supabase/migrations/20260827000000_init_schema.sql`](file:///c:/Users/popur/Documents/Projects/AI_Revenue_Recovery/supabase/migrations/20260827000000_init_schema.sql).
 
@@ -197,7 +197,7 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 # LLM Configuration
 LLM_PROVIDER=local
 LOCAL_LLM_API_URL=http://localhost:11434/v1
-LOCAL_LLM_MODEL=qwen3.5:9b
+LOCAL_LLM_MODEL=qwen3.5:2b
 LOCAL_LLM_TIMEOUT=120000
 
 # Email Configuration
@@ -222,7 +222,7 @@ RAZORPAY_WEBHOOK_SECRET=xxxx
 
 2. **Start Local Ollama Engine**:
    ```bash
-   ollama run qwen3.5:9b
+   ollama run qwen3.5:2b
    ```
 
 3. **Start Next.js Development Server**:

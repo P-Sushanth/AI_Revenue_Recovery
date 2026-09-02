@@ -106,7 +106,7 @@ export default function Dashboard() {
   // Preflight health check states
   const [ollamaReachable, setOllamaReachable] = useState<boolean | null>(null);
   const [modelInstalled, setModelInstalled] = useState<boolean | null>(null);
-  const [targetModel, setTargetModel] = useState("qwen3.5:9b");
+  const [targetModel, setTargetModel] = useState("qwen3.5:2b");
   const [checkingHealth, setCheckingHealth] = useState(false);
   const [isHostedDemo, setIsHostedDemo] = useState(false);
 
@@ -336,7 +336,7 @@ export default function Dashboard() {
       if (result.success && result.health) {
         setOllamaReachable(result.health.reachable);
         setModelInstalled(result.health.modelAvailable);
-        setTargetModel(result.health.model || "qwen3.5:9b");
+        setTargetModel(result.health.model || "qwen3.5:2b");
         setIsHostedDemo(Boolean(result.health.isHostedDemo));
       } else {
         setOllamaReachable(false);
