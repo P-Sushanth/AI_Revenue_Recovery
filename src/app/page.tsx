@@ -661,11 +661,11 @@ export default function Dashboard() {
             <button
               onClick={handleSeedDatabase}
               disabled={seeding}
-              aria-label="Reset simulation seeds"
+              aria-label="Reset database seeds"
               className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-white hover:bg-neutral-50 text-neutral-600 hover:text-neutral-900 rounded-lg transition border border-neutral-200 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-neutral-200"
             >
               <Database className="h-4 w-4" />
-              {seeding ? "Resetting..." : "Reset Seeds"}
+              {seeding ? "Resetting..." : "Reset Database"}
             </button>
 
             <div className="flex items-center bg-white border border-neutral-200 rounded-lg p-1">
