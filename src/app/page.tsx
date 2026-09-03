@@ -1485,44 +1485,13 @@ export default function Dashboard() {
                             </span>
                           </td>
                           <td className="px-4 py-3.5 text-neutral-700 whitespace-nowrap">
-                            <div className="inline-flex items-center gap-1.5">
-                              <span className="text-[11px] font-medium text-neutral-800 bg-neutral-100 border border-neutral-200/60 px-2 py-0.5 rounded">
-                                {risk.workflows?.[0]?.recommended_action === "send_payment_recovery_email" || (risk.workflows as any)?.recommended_action === "send_payment_recovery_email"
-                                  ? "Send Recovery Email"
-                                  : risk.workflows?.[0]?.recommended_action === "no_action" || (risk.workflows as any)?.recommended_action === "no_action"
-                                  ? "No Action"
-                                  : "Pending AI"}
-                              </span>
-                              {(() => {
-                                const wfId = Array.isArray(risk.workflows) ? risk.workflows[0]?.id : (risk.workflows as any)?.id || null;
-                                return (
-                                  <>
-                                    {wfId && (
-                                      <button
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          handleOpenEmailPreview(wfId);
-                                        }}
-                                        title="Preview AI-Generated Email Copy"
-                                        className="p-1 text-neutral-400 hover:text-neutral-800 hover:bg-neutral-200/60 rounded transition inline-flex items-center"
-                                      >
-                                        <Mail className="h-3.5 w-3.5" />
-                                      </button>
-                                    )}
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleOpenAgentChat(wfId, risk.customer?.name, risk.subscription?.plan_name);
-                                      }}
-                                      title="Ask AI Billing Agent about this customer"
-                                      className="p-1 text-amber-600 hover:text-amber-900 hover:bg-amber-100/60 rounded transition inline-flex items-center"
-                                    >
-                                      <Bot className="h-3.5 w-3.5" />
-                                    </button>
-                                  </>
-                                );
-                              })()}
-                            </div>
+                            <span className="text-[11px] font-medium text-neutral-800 bg-neutral-100 border border-neutral-200/60 px-2 py-0.5 rounded">
+                              {risk.workflows?.[0]?.recommended_action === "send_payment_recovery_email" || (risk.workflows as any)?.recommended_action === "send_payment_recovery_email"
+                                ? "Send Recovery Email"
+                                : risk.workflows?.[0]?.recommended_action === "no_action" || (risk.workflows as any)?.recommended_action === "no_action"
+                                ? "No Action"
+                                : "Pending AI"}
+                            </span>
                           </td>
                           <td className="px-4 py-3.5 text-right whitespace-nowrap">
                             <div className="inline-flex items-center gap-2">
