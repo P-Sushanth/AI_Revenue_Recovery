@@ -32,11 +32,11 @@ export default async function UpdatePaymentPage({ searchParams }: PageProps) {
 
   const db = getDbClient(true); // Server-side admin client to bypass RLS
 
-  // 1. Fetch customer details by Supabase UUID OR external customer ID
+  // 1. Fetch customer details by Supabase UUID OR external ID
   const { data: customer, error: customerError } = await db
     .from("customers")
-    .select("id, name, email, external_customer_id")
-    .or(`id.eq.${cleanId},external_customer_id.eq.${cleanId}`)
+    .select("id, name, email, external_id")
+    .or(`id.eq.${cleanId},external_id.eq.${cleanId}`)
     .maybeSingle();
 
   if (customerError || !customer) {
