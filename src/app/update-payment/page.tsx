@@ -13,9 +13,11 @@ export default async function UpdatePaymentPage({ searchParams }: PageProps) {
     ? await searchParams
     : (searchParams as any);
 
-  const customerId = resolvedParams?.customer_id;
+  const rawCustomerId = resolvedParams?.customer_id || "";
+  // Clean trailing slashes, backslashes, quotes, or whitespace often added when copying from raw JSON/logs
+  const cleanId = rawCustomerId.trim().replace(/[\/\\"'`]+$/, "").trim();
 
-  if (!customerId) {
+  if (!cleanId) {
     return (
       <div className="min-h-screen bg-zinc-950 text-zinc-50 flex items-center justify-center p-6">
         <div className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-8 max-w-md w-full text-center shadow-2xl">
@@ -30,11 +32,11 @@ export default async function UpdatePaymentPage({ searchParams }: PageProps) {
 
   const db = getDbClient(true); // Server-side admin client to bypass RLS
 
-  // 1. Fetch customer details
+  // 1. Fetch customer details by Supabase UUID OR external customer ID
   const { data: customer, error: customerError } = await db
     .from("customers")
-    .select("id, name, email")
-    .eq("id", customerId)
+    .select("id, name, email, external_customer_id")
+    .or(`id.eq.${cleanId},external_customer_id.eq.${cleanId}`)
     .maybeSingle();
 
   if (customerError || !customer) {
